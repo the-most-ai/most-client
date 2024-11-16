@@ -1,4 +1,5 @@
 from pathlib import Path
+from typing import List
 
 import json5
 import requests
@@ -27,6 +28,7 @@ class MostClient(object):
                 print("Visit: https://app.the-most.ai/integrations and get clientId, clientSecret")
                 self.client_id = input("Please enter your client ID: ")
                 self.client_secret = input("Please enter your client secret: ")
+                self.save_credentials()
         else:
             self.save_credentials()
 
@@ -119,15 +121,19 @@ class MostClient(object):
                              files={"audio_file": f})
         return self.retort.load(resp.json(), Audio)
 
-    def list_audios(self, limit: int = 10):
-        pass
+    def list_audios(self,
+                    offset: int = 0,
+                    limit: int = 10) -> List[Audio]:
+        resp = self.get(f"https://api.the-most.ai/api/external/{self.client_id}/list?offset={offset}&limit={limit}")
+        audio_list = resp.json()
+        return self.retort.load(audio_list, List[Audio])
 
     def list_models(self):
         resp = self.get("https://api.the-most.ai/api/external/list_models")
         return [self.with_model(model['model'])
                 for model in resp.json()]
 
-    def fetch_results(self, model_id, audio_id):
+    def fetch_results(self, audio_id):
         pass
 
     def __repr__(self):

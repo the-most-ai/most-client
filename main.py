@@ -16,8 +16,9 @@ def main(audio_path: Path):
     client = MostClient()
     client.refresh_access_token()
     print(client.list_models())
-    audio_id = client.upload_audio(audio_path)
-    print("Audio ID: {}".format(audio_id))
+    print(client.list_audios())
+    # audio_id = client.upload_audio(audio_path)
+    # print("Audio ID: {}".format(audio_id))
 
 
 if __name__ == '__main__':
