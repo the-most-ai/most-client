@@ -14,7 +14,7 @@ def parse_args():
 
 def main(audio_path: Path):
     client = MostClient()
-    client.refresh_access_token()
+
     models = client.list_models()
     print(models)
 

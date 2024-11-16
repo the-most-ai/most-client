@@ -1,6 +1,4 @@
-from pathlib import Path
 from typing import List
-
 import json5
 import requests
 from adaptix import Retort
@@ -141,12 +139,16 @@ class MostClient(object):
         raise NotImplementedError()
 
     def fetch_results(self, audio_id) -> Result:
-        resp = self.post(f"https://api.the-most.ai/api/external/{self.client_id}/audio/{audio_id}/model/{self.model_id}/results")
+        resp = self.get(f"https://api.the-most.ai/api/external/{self.client_id}/audio/{audio_id}/model/{self.model_id}/results")
         return self.retort.load(resp.json(), Result)
 
     def fetch_text(self, audio_id) -> Result:
-        resp = self.post(f"https://api.the-most.ai/api/external/{self.client_id}/audio/{audio_id}/model/{self.model_id}/text")
+        resp = self.get(f"https://api.the-most.ai/api/external/{self.client_id}/audio/{audio_id}/model/{self.model_id}/text")
         return self.retort.load(resp.json(), Result)
+
+    def __call__(self, audio_path: Path):
+        audio = self.upload_audio(audio_path)
+        return self.apply(audio.id)
 
     def __repr__(self):
         return "<MostClient(model_id='%s')>" % (self.model_id, )

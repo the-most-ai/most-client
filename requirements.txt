@@ -1,0 +1,13 @@
+requests
+wheel
+adaptix
+json5
+dataclasses_json
+black
+coverage
+flake8
+mypy
+pylint
+pytest
+tox
+twine
