@@ -133,7 +133,16 @@ class MostClient(object):
         return [self.with_model(model['model'])
                 for model in resp.json()]
 
+    def apply(self, audio_id):
+        pass
+
+    def apply_later(self, audio_id):
+        pass
+
     def fetch_results(self, audio_id):
+        pass
+
+    def fetch_text(self, audio_id):
         pass
 
     def __repr__(self):
