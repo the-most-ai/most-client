@@ -4,7 +4,7 @@ from typing import List
 import json5
 import requests
 from adaptix import Retort
-from most.types import Audio
+from most.types import Audio, Result
 from pathlib import Path
 
 
@@ -133,17 +133,20 @@ class MostClient(object):
         return [self.with_model(model['model'])
                 for model in resp.json()]
 
-    def apply(self, audio_id):
-        pass
+    def apply(self, audio_id) -> Result:
+        resp = self.post(f"https://api.the-most.ai/api/external/{self.client_id}/audio/{audio_id}/model/{self.model_id}/apply")
+        return self.retort.load(resp.json(), Result)
 
     def apply_later(self, audio_id):
-        pass
+        raise NotImplementedError()
 
-    def fetch_results(self, audio_id):
-        pass
+    def fetch_results(self, audio_id) -> Result:
+        resp = self.post(f"https://api.the-most.ai/api/external/{self.client_id}/audio/{audio_id}/model/{self.model_id}/results")
+        return self.retort.load(resp.json(), Result)
 
-    def fetch_text(self, audio_id):
-        pass
+    def fetch_text(self, audio_id) -> Result:
+        resp = self.post(f"https://api.the-most.ai/api/external/{self.client_id}/audio/{audio_id}/model/{self.model_id}/text")
+        return self.retort.load(resp.json(), Result)
 
     def __repr__(self):
         return "<MostClient(model_id='%s')>" % (self.model_id, )

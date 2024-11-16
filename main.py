@@ -15,10 +15,18 @@ def parse_args():
 def main(audio_path: Path):
     client = MostClient()
     client.refresh_access_token()
-    print(client.list_models())
-    print(client.list_audios())
-    # audio_id = client.upload_audio(audio_path)
-    # print("Audio ID: {}".format(audio_id))
+    models = client.list_models()
+    print(models)
+
+    model = models[0]
+    audios = client.list_audios()
+    print(audios)
+
+    audio = client.upload_audio(audio_path)
+    print(audio)
+
+    result = model.apply(audio.id)
+    print(result)
 
 
 if __name__ == '__main__':
