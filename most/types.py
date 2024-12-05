@@ -27,3 +27,14 @@ class Result:
     text: Optional[str]
     url: Optional[str]
     results: Optional[List[ColumnResult]]
+
+
+@dataclass
+class Column:
+    name: str
+    subcolumns: List[str]
+
+
+@dataclass
+class Script:
+    columns: List[Column]
