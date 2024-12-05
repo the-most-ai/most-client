@@ -11,3 +11,4 @@ pylint
 pytest
 tox
 twine
+httpx
