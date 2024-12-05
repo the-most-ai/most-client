@@ -11,4 +11,3 @@ pylint
 pytest
 tox
 twine
-aiofiles

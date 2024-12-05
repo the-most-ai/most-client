@@ -19,6 +19,10 @@ def main(audio_path: Path):
     print(models)
 
     model = models[0]
+
+    script = model.get_model_script()
+    print(script)
+
     audios = client.list_audios()
     print(audios)
 

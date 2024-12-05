@@ -1,6 +1,4 @@
 from typing import List
-
-import aiofiles
 import json5
 from adaptix import Retort
 from most.types import Audio, Result, Script
@@ -36,7 +34,13 @@ class AsyncMostClient(object):
         self.access_token = None
         self.model_id = model_id
 
-        self.refresh_access_token()
+    async def __aenter__(self):
+        await self.session.__aenter__()
+        await self.refresh_access_token()
+        return self
+
+    async def __aexit__(self, exc_type, exc_val, exc_tb):
+        await self.session.__aexit__(exc_type, exc_val, exc_tb)
 
     @property
     def cache_path(self):
@@ -116,9 +120,10 @@ class AsyncMostClient(object):
         return resp
 
     async def upload_audio(self, audio_path) -> Audio:
-        async with aiofiles.open(audio_path, mode='rb') as f:
+        with open(audio_path, mode='rb') as f:
             resp = await self.post(f"https://api.the-most.ai/api/external/{self.client_id}/upload",
-                                   files={"audio_file": f})
+                                   files={"audio_file": f},
+                                   timeout=None)
         return self.retort.load(resp.json(), Audio)
 
     async def list_audios(self,
@@ -142,7 +147,8 @@ class AsyncMostClient(object):
     async def apply(self, audio_id) -> Result:
         if self.model_id is None:
             raise RuntimeError("Please choose a model to apply. [try list_models()]")
-        resp = await self.post(f"https://api.the-most.ai/api/external/{self.client_id}/audio/{audio_id}/model/{self.model_id}/apply")
+        resp = await self.post(f"https://api.the-most.ai/api/external/{self.client_id}/audio/{audio_id}/model/{self.model_id}/apply",
+                               timeout=None)
         return self.retort.load(resp.json(), Result)
 
     async def apply_later(self, audio_id):
