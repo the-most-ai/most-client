@@ -1,7 +1,7 @@
 from typing import List
 import json5
 from adaptix import Retort
-from most.types import Audio, Result, Script
+from most.types import Audio, Result, Script, JobStatus
 from pathlib import Path
 import httpx
 
@@ -152,7 +152,16 @@ class AsyncMostClient(object):
         return self.retort.load(resp.json(), Result)
 
     async def apply_later(self, audio_id):
-        raise NotImplementedError()
+        if self.model_id is None:
+            raise RuntimeError("Please choose a model to apply. [try list_models()]")
+        resp = await self.post(f"https://api.the-most.ai/api/external/{self.client_id}/audio/{audio_id}/model/{self.model_id}/apply_async")
+        return self.retort.load(resp.json(), Result)
+
+    async def get_job_status(self, audio_id) -> JobStatus:
+        if self.model_id is None:
+            raise RuntimeError("Please choose a model to apply. [try list_models()]")
+        resp = await self.post(f"https://api.the-most.ai/api/external/{self.client_id}/audio/{audio_id}/model/{self.model_id}/apply_status")
+        return self.retort.load(resp.json(), JobStatus)
 
     async def fetch_results(self, audio_id) -> Result:
         if self.model_id is None:
@@ -173,4 +182,4 @@ class AsyncMostClient(object):
         return await self.apply(audio.id)
 
     def __repr__(self):
-        return "<MostClient(model_id='%s')>" % (self.model_id, )
+        return "<AsyncMostClient(model_id='%s')>" % (self.model_id, )

@@ -2,7 +2,7 @@ from typing import List
 import json5
 import requests
 from adaptix import Retort
-from most.types import Audio, Result, Script
+from most.types import Audio, Result, Script, JobStatus
 from pathlib import Path
 
 
@@ -143,8 +143,17 @@ class MostClient(object):
         resp = self.post(f"https://api.the-most.ai/api/external/{self.client_id}/audio/{audio_id}/model/{self.model_id}/apply")
         return self.retort.load(resp.json(), Result)
 
-    def apply_later(self, audio_id):
-        raise NotImplementedError()
+    def apply_later(self, audio_id) -> Result:
+        if self.model_id is None:
+            raise RuntimeError("Please choose a model to apply. [try list_models()]")
+        resp = self.post(f"https://api.the-most.ai/api/external/{self.client_id}/audio/{audio_id}/model/{self.model_id}/apply_async")
+        return self.retort.load(resp.json(), Result)
+
+    def get_job_status(self, audio_id) -> JobStatus:
+        if self.model_id is None:
+            raise RuntimeError("Please choose a model to apply. [try list_models()]")
+        resp = self.post(f"https://api.the-most.ai/api/external/{self.client_id}/audio/{audio_id}/model/{self.model_id}/apply_status")
+        return self.retort.load(resp.json(), JobStatus)
 
     def fetch_results(self, audio_id) -> Result:
         if self.model_id is None:

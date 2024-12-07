@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import Optional, List
+from typing import Optional, List, Literal
 
 
 @dataclass
@@ -38,3 +38,8 @@ class Column:
 @dataclass
 class Script:
     columns: List[Column]
+
+
+@dataclass
+class JobStatus:
+    status: Literal["not_found", "pending", "completed", "error"]
