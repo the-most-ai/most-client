@@ -126,6 +126,11 @@ class AsyncMostClient(object):
                                    timeout=None)
         return self.retort.load(resp.json(), Audio)
 
+    async def upload_audio_url(self, audio_url) -> Audio:
+        resp = await self.post(f"https://api.the-most.ai/api/external/{self.client_id}/upload_url",
+                               json={"audio_url": audio_url})
+        return self.retort.load(resp.json(), Audio)
+
     async def list_audios(self,
                     offset: int = 0,
                     limit: int = 10) -> List[Audio]:

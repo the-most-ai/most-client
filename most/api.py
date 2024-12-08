@@ -119,6 +119,11 @@ class MostClient(object):
                              files={"audio_file": f})
         return self.retort.load(resp.json(), Audio)
 
+    def upload_audio_url(self, audio_url) -> Audio:
+        resp = self.post(f"https://api.the-most.ai/api/external/{self.client_id}/upload_url",
+                         json={"audio_url": audio_url})
+        return self.retort.load(resp.json(), Audio)
+
     def list_audios(self,
                     offset: int = 0,
                     limit: int = 10) -> List[Audio]:
