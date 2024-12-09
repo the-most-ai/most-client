@@ -95,6 +95,9 @@ class AsyncMostClient(object):
             return await self.get(url,
                                   headers=headers,
                                   **kwargs)
+        if resp.status_code >= 400:
+            raise RuntimeError(resp.json()['message'] if resp.headers.get(
+                "Content-Type") == "application/json" else "Something went wrong.")
         return resp
 
     async def post(self, url,
@@ -117,6 +120,9 @@ class AsyncMostClient(object):
                                    json=json,
                                    headers=headers,
                                    **kwargs)
+        if resp.status_code >= 400:
+            raise RuntimeError(resp.json()['message'] if resp.headers.get(
+                "Content-Type") == "application/json" else "Something went wrong.")
         return resp
 
     async def upload_audio(self, audio_path) -> Audio:

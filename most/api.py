@@ -89,6 +89,8 @@ class MostClient(object):
             return self.get(url,
                             headers=headers,
                             **kwargs)
+        if resp.status_code >= 400:
+            raise RuntimeError(resp.json()['message'] if resp.headers.get("Content-Type") == "application/json" else "Something went wrong.")
         return resp
 
     def post(self, url,
@@ -111,6 +113,8 @@ class MostClient(object):
                              json=json,
                              headers=headers,
                              **kwargs)
+        if resp.status_code >= 400:
+            raise RuntimeError(resp.json()['message'] if resp.headers.get("Content-Type") == "application/json" else "Something went wrong.")
         return resp
 
     def upload_audio(self, audio_path) -> Audio:
