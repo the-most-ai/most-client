@@ -89,6 +89,7 @@ class AsyncMostClient(object):
         headers.update({"Authorization": "Bearer %s" % self.access_token})
         resp = await self.session.get(url,
                                       headers=headers,
+                                      timeout=None,
                                       **kwargs)
         if resp.status_code == 401:
             await self.refresh_access_token()
@@ -112,6 +113,7 @@ class AsyncMostClient(object):
                                        data=data,
                                        json=json,
                                        headers=headers,
+                                       timeout=None,
                                        **kwargs)
         if resp.status_code == 401:
             await self.refresh_access_token()
@@ -128,8 +130,7 @@ class AsyncMostClient(object):
     async def upload_audio(self, audio_path) -> Audio:
         with open(audio_path, mode='rb') as f:
             resp = await self.post(f"https://api.the-most.ai/api/external/{self.client_id}/upload",
-                                   files={"audio_file": f},
-                                   timeout=None)
+                                   files={"audio_file": f})
         return self.retort.load(resp.json(), Audio)
 
     async def upload_audio_url(self, audio_url) -> Audio:
@@ -158,8 +159,7 @@ class AsyncMostClient(object):
     async def apply(self, audio_id) -> Result:
         if self.model_id is None:
             raise RuntimeError("Please choose a model to apply. [try list_models()]")
-        resp = await self.post(f"https://api.the-most.ai/api/external/{self.client_id}/audio/{audio_id}/model/{self.model_id}/apply",
-                               timeout=None)
+        resp = await self.post(f"https://api.the-most.ai/api/external/{self.client_id}/audio/{audio_id}/model/{self.model_id}/apply")
         return self.retort.load(resp.json(), Result)
 
     async def apply_later(self, audio_id):

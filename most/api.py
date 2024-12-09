@@ -72,7 +72,8 @@ class MostClient(object):
     def refresh_access_token(self):
         resp = self.session.post("https://api.the-most.ai/api/external/access_token",
                                  json={"client_id": self.client_id,
-                                        "client_secret": self.client_secret})
+                                        "client_secret": self.client_secret},
+                                 timeout=None)
         access_token = resp.json()
         self.access_token = access_token
 
@@ -83,6 +84,7 @@ class MostClient(object):
         headers.update({"Authorization": "Bearer %s" % self.access_token})
         resp = self.session.get(url,
                                 headers=headers,
+                                timeout=None,
                                 **kwargs)
         if resp.status_code == 401:
             self.refresh_access_token()
@@ -105,6 +107,7 @@ class MostClient(object):
                                  data=data,
                                  json=json,
                                  headers=headers,
+                                 timeout=None,
                                  **kwargs)
         if resp.status_code == 401:
             self.refresh_access_token()
