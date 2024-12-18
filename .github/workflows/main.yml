@@ -22,8 +22,13 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install -r requirements.txt         
+          pip install -r requirements.txt
 
-      - name: Run tests
+      - name: Run Linter
         run: |
-          pytest tests/ --junitxml=report.xml
+          python -m pip install ruff
+          ruff check .
+
+      - name: Unit Test
+        run: |
+          pytest tests/unit --junitxml=report.xml
