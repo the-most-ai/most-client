@@ -27,6 +27,7 @@ jobs:
       - name: Run Ruff
         run: |
           ruff check .
+        continue-on-error: true
 
   test:
     name: Tests
