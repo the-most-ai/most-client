@@ -188,6 +188,14 @@ class AsyncMostClient(object):
         resp = await self.get(f"https://api.the-most.ai/api/external/{self.client_id}/audio/{audio_id}/model/{self.model_id}/text")
         return self.retort.load(resp.json(), Result)
 
+    async def export(self, audio_ids: List[str]) -> str:
+        if self.model_id is None:
+            raise RuntimeError("Please choose a model to apply. [try list_models()]")
+
+        resp = await self.get(f"https://api.the-most.ai/api/external/{self.client_id}/model/{self.model_id}/export",
+                              params={'audio_ids': ','.join(audio_ids)})
+        return resp.next_request.url
+
     async def __call__(self, audio_path: Path):
         audio = await self.upload_audio(audio_path)
         return await self.apply(audio.id)
