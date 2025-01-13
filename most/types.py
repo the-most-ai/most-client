@@ -12,6 +12,12 @@ class Audio(DataClassJsonMixin):
 
 @dataclass_json
 @dataclass
+class Text(DataClassJsonMixin):
+    id: str
+
+
+@dataclass_json
+@dataclass
 class SubcolumnResult(DataClassJsonMixin):
     name: str
     score: Optional[int]

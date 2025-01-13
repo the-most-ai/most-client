@@ -2,7 +2,7 @@ from typing import List
 import json5
 import requests
 from adaptix import Retort
-from most.types import Audio, Result, Script, JobStatus
+from most.types import Audio, Result, Script, JobStatus, Text
 from pathlib import Path
 
 
@@ -119,6 +119,11 @@ class MostClient(object):
         if resp.status_code >= 400:
             raise RuntimeError(resp.json()['message'] if resp.headers.get("Content-Type") == "application/json" else "Something went wrong.")
         return resp
+
+    def upload_text(self, text: str) -> Text:
+        resp = self.post(f"https://api.the-most.ai/api/external/{self.client_id}/upload_text",
+                         files={"text": text})
+        return self.retort.load(resp.json(), Text)
 
     def upload_audio(self, audio_path) -> Audio:
         with open(audio_path, 'rb') as f:

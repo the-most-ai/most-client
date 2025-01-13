@@ -1,7 +1,7 @@
 from typing import List
 import json5
 from adaptix import Retort
-from most.types import Audio, Result, Script, JobStatus
+from most.types import Audio, Result, Script, JobStatus, Text
 from pathlib import Path
 import httpx
 
@@ -132,6 +132,11 @@ class AsyncMostClient(object):
             resp = await self.post(f"https://api.the-most.ai/api/external/{self.client_id}/upload",
                                    files={"audio_file": f})
         return self.retort.load(resp.json(), Audio)
+
+    async def upload_text(self, text: str) -> Text:
+        resp = await self.post(f"https://api.the-most.ai/api/external/{self.client_id}/upload_text",
+                               json={"text": text})
+        return self.retort.load(resp.json(), Text)
 
     async def upload_audio_url(self, audio_url) -> Audio:
         resp = await self.post(f"https://api.the-most.ai/api/external/{self.client_id}/upload_url",
