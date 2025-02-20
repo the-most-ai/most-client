@@ -1,6 +1,13 @@
 from dataclasses import dataclass
 from dataclasses_json import dataclass_json, DataClassJsonMixin
-from typing import Optional, List, Literal
+from typing import Optional, List, Literal, Dict
+
+
+@dataclass_json
+@dataclass
+class StoredAudioData(DataClassJsonMixin):
+    id: str
+    data: Dict[str, str]
 
 
 @dataclass_json

@@ -1,7 +1,7 @@
-from typing import List
+from typing import List, Dict
 import json5
 from adaptix import Retort
-from most.types import Audio, Result, Script, JobStatus, Text
+from most.types import Audio, Result, Script, JobStatus, Text, StoredAudioData
 from pathlib import Path
 import httpx
 
@@ -200,6 +200,19 @@ class AsyncMostClient(object):
         resp = await self.get(f"https://api.the-most.ai/api/external/{self.client_id}/model/{self.model_id}/export",
                               params={'audio_ids': ','.join(audio_ids)})
         return resp.next_request.url
+
+    async def store_info(self,
+                         audio_id: str,
+                         data: Dict[str, str]):
+        resp = await self.post(f"https://api.the-most.ai/api/external/{self.client_id}/audio/{audio_id}/info",
+                               json={
+                                   "data": data,
+                               })
+        return self.retort.load(resp.json(), StoredAudioData)
+
+    async def fetch_info(self, audio_id: str) -> Dict[str, str]:
+        resp = await self.get(f"https://api.the-most.ai/api/external/{self.client_id}/audio/{audio_id}/info")
+        return self.retort.load(resp.json(), StoredAudioData)
 
     async def __call__(self, audio_path: Path):
         audio = await self.upload_audio(audio_path)

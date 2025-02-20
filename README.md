@@ -27,4 +27,10 @@ print(results)
         }
     ]
 }
+
+most.store_info(results['id'], {
+    "key1": "value1"
+})
+
+most.fetch_info(results['id'])
 ```
