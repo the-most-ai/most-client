@@ -1,4 +1,6 @@
 from dataclasses import dataclass
+
+from bson import ObjectId
 from dataclasses_json import dataclass_json, DataClassJsonMixin
 from typing import Optional, List, Literal, Dict
 
@@ -73,3 +75,13 @@ class Result(DataClassJsonMixin):
                                       subcolumns=[subcolumn_result.name
                                                   for subcolumn_result in column_result.subcolumns])
                                for column_result in self.results])
+
+
+def is_valid_id(smth_id: Optional[str]) -> bool:
+    if smth_id is None:
+        return False
+    try:
+        ObjectId(smth_id)
+        return True
+    except:
+        return False

@@ -1,7 +1,7 @@
 from typing import List, Dict
 import json5
 from adaptix import Retort
-from most.types import Audio, Result, Script, JobStatus, Text, StoredAudioData
+from most.types import Audio, Result, Script, JobStatus, Text, StoredAudioData, is_valid_id
 from pathlib import Path
 import httpx
 
@@ -72,6 +72,8 @@ class AsyncMostClient(object):
 
     def with_model(self, model_id):
         client = self.clone()
+        if not is_valid_id(self.model_id):
+            raise RuntimeError("Please choose valid model to apply. [try list_models()]")
         client.model_id = model_id
         return client
 
@@ -151,8 +153,9 @@ class AsyncMostClient(object):
         return self.retort.load(audio_list, List[Audio])
 
     async def get_model_script(self) -> Script:
-        if self.model_id is None:
-            raise RuntimeError("Please choose a model to apply. [try list_models()]")
+        if not is_valid_id(self.model_id):
+            raise RuntimeError("Please choose valid model to apply. [try list_models()]")
+
         resp = await self.get(f"https://api.the-most.ai/api/external/{self.client_id}/model/{self.model_id}/script")
         return self.retort.load(resp.json(), Script)
 
@@ -162,40 +165,58 @@ class AsyncMostClient(object):
                 for model in resp.json()]
 
     async def apply(self, audio_id) -> Result:
-        if self.model_id is None:
-            raise RuntimeError("Please choose a model to apply. [try list_models()]")
+        if not is_valid_id(self.model_id):
+            raise RuntimeError("Please choose valid model to apply. [try list_models()]")
+
+        if not is_valid_id(audio_id):
+            raise RuntimeError("Please use valid audio_id. [try audio.id from list_audios()]")
+
         resp = await self.post(f"https://api.the-most.ai/api/external/{self.client_id}/audio/{audio_id}/model/{self.model_id}/apply")
         return self.retort.load(resp.json(), Result)
 
     async def apply_later(self, audio_id):
-        if self.model_id is None:
-            raise RuntimeError("Please choose a model to apply. [try list_models()]")
+        if not is_valid_id(self.model_id):
+            raise RuntimeError("Please choose valid model to apply. [try list_models()]")
+
+        if not is_valid_id(audio_id):
+            raise RuntimeError("Please use valid audio_id. [try audio.id from list_audios()]")
+
         resp = await self.post(f"https://api.the-most.ai/api/external/{self.client_id}/audio/{audio_id}/model/{self.model_id}/apply_async")
         return self.retort.load(resp.json(), Result)
 
     async def get_job_status(self, audio_id) -> JobStatus:
-        if self.model_id is None:
-            raise RuntimeError("Please choose a model to apply. [try list_models()]")
+        if not is_valid_id(self.model_id):
+            raise RuntimeError("Please choose valid model to apply. [try list_models()]")
+
+        if not is_valid_id(audio_id):
+            raise RuntimeError("Please use valid audio_id. [try audio.id from list_audios()]")
+
         resp = await self.post(f"https://api.the-most.ai/api/external/{self.client_id}/audio/{audio_id}/model/{self.model_id}/apply_status")
         return self.retort.load(resp.json(), JobStatus)
 
     async def fetch_results(self, audio_id) -> Result:
-        if self.model_id is None:
-            raise RuntimeError("Please choose a model to apply. [try list_models()]")
+        if not is_valid_id(self.model_id):
+            raise RuntimeError("Please choose valid model to apply. [try list_models()]")
+
+        if not is_valid_id(audio_id):
+            raise RuntimeError("Please use valid audio_id. [try audio.id from list_audios()]")
 
         resp = await self.get(f"https://api.the-most.ai/api/external/{self.client_id}/audio/{audio_id}/model/{self.model_id}/results")
         return self.retort.load(resp.json(), Result)
 
     async def fetch_text(self, audio_id) -> Result:
-        if self.model_id is None:
-            raise RuntimeError("Please choose a model to apply. [try list_models()]")
+        if not is_valid_id(self.model_id):
+            raise RuntimeError("Please choose valid model to apply. [try list_models()]")
+
+        if not is_valid_id(audio_id):
+            raise RuntimeError("Please use valid audio_id. [try audio.id from list_audios()]")
 
         resp = await self.get(f"https://api.the-most.ai/api/external/{self.client_id}/audio/{audio_id}/model/{self.model_id}/text")
         return self.retort.load(resp.json(), Result)
 
     async def export(self, audio_ids: List[str]) -> str:
-        if self.model_id is None:
-            raise RuntimeError("Please choose a model to apply. [try list_models()]")
+        if not is_valid_id(self.model_id):
+            raise RuntimeError("Please choose valid model to apply. [try list_models()]")
 
         resp = await self.get(f"https://api.the-most.ai/api/external/{self.client_id}/model/{self.model_id}/export",
                               params={'audio_ids': ','.join(audio_ids)})
@@ -211,6 +232,8 @@ class AsyncMostClient(object):
         return self.retort.load(resp.json(), StoredAudioData)
 
     async def fetch_info(self, audio_id: str) -> Dict[str, str]:
+        if not is_valid_id(audio_id):
+            raise RuntimeError("Please use valid audio_id. [try audio.id from list_audios()]")
         resp = await self.get(f"https://api.the-most.ai/api/external/{self.client_id}/audio/{audio_id}/info")
         return self.retort.load(resp.json(), StoredAudioData)
 
