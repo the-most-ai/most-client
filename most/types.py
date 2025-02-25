@@ -80,6 +80,10 @@ class Result(DataClassJsonMixin):
 def is_valid_id(smth_id: Optional[str]) -> bool:
     if smth_id is None:
         return False
+
+    if smth_id.startswith("most-"):
+        smth_id = smth_id[5:]
+
     try:
         ObjectId(smth_id)
         return True
