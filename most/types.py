@@ -76,6 +76,42 @@ class Result(DataClassJsonMixin):
                                for column_result in self.results])
 
 
+@dataclass_json
+@dataclass
+class DialogSegment(DataClassJsonMixin):
+    start_time_ms: int
+    end_time_ms: int
+    text: str
+    speaker: str
+    emotion: Optional[str] = None
+    intensity: Optional[float] = None
+
+    def to_text(self):
+        if self.emotion is None:
+            return f'{self.speaker}: {self.text}\n'
+        else:
+            return f'{self.speaker}: <emotion name="{self.emotion}" intensity="{self.intensity}">{self.text}</emotion>\n'
+
+
+@dataclass_json
+@dataclass
+class Dialog(DataClassJsonMixin):
+    segments: List[DialogSegment]
+
+    def to_text(self):
+        return ''.join([segment.to_text()
+                        for segment in self.segments])
+
+
+@dataclass_json
+@dataclass
+class DialogResult(DataClassJsonMixin):
+    id: str
+    dialog: Optional[Dialog]
+    url: Optional[str]
+    results: Optional[List[ColumnResult]]
+
+
 def is_valid_objectid(oid: str) -> bool:
     """
     Check if a given string is a valid MongoDB ObjectId (24-character hex).

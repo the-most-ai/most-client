@@ -2,7 +2,7 @@ from typing import List, Dict
 import json5
 import requests
 from adaptix import Retort
-from most.types import Audio, Result, Script, JobStatus, Text, StoredAudioData, is_valid_id
+from most.types import Audio, Result, Script, JobStatus, Text, StoredAudioData, is_valid_id, DialogResult
 from pathlib import Path
 
 
@@ -204,6 +204,16 @@ class MostClient(object):
 
         resp = self.get(f"https://api.the-most.ai/api/external/{self.client_id}/audio/{audio_id}/model/{self.model_id}/text")
         return self.retort.load(resp.json(), Result)
+
+    def fetch_dialog(self, audio_id) -> DialogResult:
+        if not is_valid_id(self.model_id):
+            raise RuntimeError("Please choose valid model to apply. [try list_models()]")
+
+        if not is_valid_id(audio_id):
+            raise RuntimeError("Please use valid audio_id. [try audio.id from list_audios()]")
+
+        resp = self.get(f"https://api.the-most.ai/api/external/{self.client_id}/audio/{audio_id}/model/{self.model_id}/dialog")
+        return self.retort.load(resp.json(), DialogResult)
 
     def export(self, audio_ids: List[str]) -> str:
         if not is_valid_id(self.model_id):
