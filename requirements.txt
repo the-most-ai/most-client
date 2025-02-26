@@ -12,4 +12,4 @@ pytest
 tox
 twine
 httpx
-bson
+bson==0.5.10
