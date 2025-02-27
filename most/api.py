@@ -1,9 +1,23 @@
-from typing import List, Dict
+import io
+import os
+from pathlib import Path
+from typing import Dict, List
+
 import json5
 import requests
 from adaptix import Retort
-from most.types import Audio, Result, Script, JobStatus, Text, StoredAudioData, is_valid_id, DialogResult
-from pathlib import Path
+from pydub import AudioSegment
+
+from most.types import (
+    Audio,
+    DialogResult,
+    JobStatus,
+    Result,
+    Script,
+    StoredAudioData,
+    Text,
+    is_valid_id,
+)
 
 
 class MostClient(object):
@@ -131,6 +145,14 @@ class MostClient(object):
                              files={"audio_file": f})
         return self.retort.load(resp.json(), Audio)
 
+    def upload_audio_segment(self, audio: AudioSegment) -> Audio:
+        f = io.BytesIO()
+        audio.export(f, format="mp3")
+        f.seek(0)
+        resp = self.post(f"https://api.the-most.ai/api/external/{self.client_id}/upload",
+                         files={"audio_file": f})
+        return self.retort.load(resp.json(), Audio)
+
     def upload_audio_url(self, audio_url) -> Audio:
         resp = self.post(f"https://api.the-most.ai/api/external/{self.client_id}/upload_url",
                          json={"audio_url": audio_url})
@@ -248,3 +270,18 @@ class MostClient(object):
 
     def __repr__(self):
         return "<MostClient(model_id='%s')>" % (self.model_id, )
+
+    def get_audio_segment_by_url(self, audio_url,
+                                 format=None):
+        if format is None:
+            format = os.path.splitext(audio_url)[1]
+            format = format.strip().lower()
+
+        resp = self.session.get(audio_url,
+                                timeout=None)
+        if resp.status_code >= 400:
+            raise RuntimeError("Audio url is not accessable")
+
+        audio = AudioSegment.from_file(io.BytesIO(resp.content),
+                                       format=format)
+        return audio

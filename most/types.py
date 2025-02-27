@@ -1,7 +1,8 @@
 import re
 from dataclasses import dataclass
-from dataclasses_json import dataclass_json, DataClassJsonMixin
-from typing import Optional, List, Literal, Dict
+from typing import Dict, List, Literal, Optional
+
+from dataclasses_json import DataClassJsonMixin, dataclass_json
 
 
 @dataclass_json

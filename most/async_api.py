@@ -1,9 +1,23 @@
-from typing import List, Dict
+import io
+import os
+from pathlib import Path
+from typing import Dict, List
+
+import httpx
 import json5
 from adaptix import Retort
-from most.types import Audio, Result, Script, JobStatus, Text, StoredAudioData, is_valid_id, DialogResult
-from pathlib import Path
-import httpx
+from pydub import AudioSegment
+
+from most.types import (
+    Audio,
+    DialogResult,
+    JobStatus,
+    Result,
+    Script,
+    StoredAudioData,
+    Text,
+    is_valid_id,
+)
 
 
 class AsyncMostClient(object):
@@ -135,6 +149,14 @@ class AsyncMostClient(object):
                                    files={"audio_file": f})
         return self.retort.load(resp.json(), Audio)
 
+    async def upload_audio_segment(self, audio: AudioSegment) -> Audio:
+        f = io.BytesIO()
+        audio.export(f, format="mp3")
+        f.seek(0)
+        resp = await self.post(f"https://api.the-most.ai/api/external/{self.client_id}/upload",
+                               files={"audio_file": f})
+        return self.retort.load(resp.json(), Audio)
+
     async def upload_text(self, text: str) -> Text:
         resp = await self.post(f"https://api.the-most.ai/api/external/{self.client_id}/upload_text",
                                json={"text": text})
@@ -146,8 +168,8 @@ class AsyncMostClient(object):
         return self.retort.load(resp.json(), Audio)
 
     async def list_audios(self,
-                    offset: int = 0,
-                    limit: int = 10) -> List[Audio]:
+                          offset: int = 0,
+                          limit: int = 10) -> List[Audio]:
         resp = await self.get(f"https://api.the-most.ai/api/external/{self.client_id}/list?offset={offset}&limit={limit}")
         audio_list = resp.json()
         return self.retort.load(audio_list, List[Audio])
@@ -253,3 +275,18 @@ class AsyncMostClient(object):
 
     def __repr__(self):
         return "<AsyncMostClient(model_id='%s')>" % (self.model_id, )
+
+    async def get_audio_segment_by_url(self, audio_url,
+                                       format=None):
+        if format is None:
+            format = os.path.splitext(audio_url)[1]
+            format = format.strip().lower()
+
+        resp = await self.session.get(audio_url,
+                                      timeout=None)
+        if resp.status_code >= 400:
+            raise RuntimeError("Audio url is not accessable")
+
+        audio = AudioSegment.from_file(io.BytesIO(resp.content),
+                                       format=format)
+        return audio
