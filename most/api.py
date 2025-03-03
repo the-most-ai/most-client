@@ -241,12 +241,19 @@ class MostClient(object):
         resp = self.get(f"https://api.the-most.ai/api/external/{self.client_id}/audio/{audio_id}/model/{self.model_id}/dialog")
         return self.retort.load(resp.json(), DialogResult)
 
-    def export(self, audio_ids: List[str]) -> str:
+    def export(self, audio_ids: List[str],
+               aggregated_by: Optional[str] = None,
+               aggregation_title: Optional[str] = None) -> str:
+        if aggregation_title is None:
+            aggregation_title = aggregated_by
+
         if not is_valid_id(self.model_id):
             raise RuntimeError("Please choose valid model to apply. [try list_models()]")
 
         resp = self.get(f"https://api.the-most.ai/api/external/{self.client_id}/model/{self.model_id}/export",
-                        params={'audio_ids': ','.join(audio_ids)})
+                        params={'audio_ids': ','.join(audio_ids),
+                                'aggregated_by': aggregated_by,
+                                'aggregation_title': aggregation_title})
         return resp.url
 
     def store_info(self,
