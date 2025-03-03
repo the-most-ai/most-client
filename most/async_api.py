@@ -1,7 +1,8 @@
 import io
 import os
+import uuid
 from pathlib import Path
-from typing import Dict, List
+from typing import Dict, List, Optional
 
 import httpx
 import json5
@@ -149,12 +150,15 @@ class AsyncMostClient(object):
                                    files={"audio_file": f})
         return self.retort.load(resp.json(), Audio)
 
-    async def upload_audio_segment(self, audio: AudioSegment) -> Audio:
+    async def upload_audio_segment(self, audio: AudioSegment,
+                                   audio_name: Optional[str] = None) -> Audio:
         f = io.BytesIO()
         audio.export(f, format="mp3")
         f.seek(0)
+        if audio_name is None:
+            audio_name = uuid.uuid4().hex + ".mp3"
         resp = await self.post(f"https://api.the-most.ai/api/external/{self.client_id}/upload",
-                               files={"audio_file": f})
+                               files={"audio_file": (audio_name, f, 'audio/mp3')})
         return self.retort.load(resp.json(), Audio)
 
     async def upload_text(self, text: str) -> Text:
