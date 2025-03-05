@@ -9,6 +9,7 @@ import requests
 from adaptix import Retort
 from pydub import AudioSegment
 
+from most.score_calculation import ScoreCalculation
 from most.types import (
     Audio,
     DialogResult,
@@ -17,7 +18,7 @@ from most.types import (
     Script,
     StoredAudioData,
     Text,
-    is_valid_id, SearchParams,
+    is_valid_id, SearchParams, ScriptScoreMapping,
 )
 
 
@@ -48,6 +49,7 @@ class MostClient(object):
         self.session = requests.Session()
         self.access_token = None
         self.model_id = model_id
+        self.score_modifier = None
 
         self.refresh_access_token()
 
@@ -77,11 +79,13 @@ class MostClient(object):
                             model_id=self.model_id)
         client.access_token = self.access_token
         client.session = self.session
+        client.score_modifier = self.score_modifier
         return client
 
     def with_model(self, model_id):
         client = self.clone()
         client.model_id = model_id
+        client.score_modifier = None
         return client
 
     def refresh_access_token(self):
@@ -176,12 +180,23 @@ class MostClient(object):
         resp = self.get(f"https://api.the-most.ai/api/external/{self.client_id}/model/{self.model_id}/script")
         return self.retort.load(resp.json(), Script)
 
+    def get_score_modifier(self):
+        if self.score_modifier is None:
+            if not is_valid_id(self.model_id):
+                raise RuntimeError("Please choose valid model to apply. [try list_models()]")
+
+            resp = self.get(f"https://api.the-most.ai/api/external/{self.client_id}/model/{self.model_id}/score_mapping")
+            score_mapping = self.retort.load(resp.json(), List[ScriptScoreMapping])
+            self.score_modifier = ScoreCalculation(score_mapping)
+        return self.score_modifier
+
     def list_models(self):
         resp = self.get("https://api.the-most.ai/api/external/list_models")
         return [self.with_model(model['model'])
                 for model in resp.json()]
 
-    def apply(self, audio_id) -> Result:
+    def apply(self, audio_id,
+              modify_scores: bool = False) -> Result:
         if not is_valid_id(self.model_id):
             raise RuntimeError("Please choose valid model to apply. [try list_models()]")
 
@@ -189,9 +204,13 @@ class MostClient(object):
             raise RuntimeError("Please use valid audio_id. [try audio.id from list_audios()]")
 
         resp = self.post(f"https://api.the-most.ai/api/external/{self.client_id}/audio/{audio_id}/model/{self.model_id}/apply")
-        return self.retort.load(resp.json(), Result)
+        result = self.retort.load(resp.json(), Result)
+        if modify_scores:
+            result = self.score_modifier.modify(result)
+        return result
 
-    def apply_later(self, audio_id) -> Result:
+    def apply_later(self, audio_id,
+                    modify_scores: bool = False) -> Result:
         if not is_valid_id(self.model_id):
             raise RuntimeError("Please choose valid model to apply. [try list_models()]")
 
@@ -199,7 +218,10 @@ class MostClient(object):
             raise RuntimeError("Please use valid audio_id. [try audio.id from list_audios()]")
 
         resp = self.post(f"https://api.the-most.ai/api/external/{self.client_id}/audio/{audio_id}/model/{self.model_id}/apply_async")
-        return self.retort.load(resp.json(), Result)
+        result = self.retort.load(resp.json(), Result)
+        if modify_scores:
+            result = self.score_modifier.modify(result)
+        return result
 
     def get_job_status(self, audio_id) -> JobStatus:
         if not is_valid_id(self.model_id):
@@ -211,7 +233,8 @@ class MostClient(object):
         resp = self.post(f"https://api.the-most.ai/api/external/{self.client_id}/audio/{audio_id}/model/{self.model_id}/apply_status")
         return self.retort.load(resp.json(), JobStatus)
 
-    def fetch_results(self, audio_id) -> Result:
+    def fetch_results(self, audio_id,
+                      modify_scores: bool = False) -> Result:
         if not is_valid_id(self.model_id):
             raise RuntimeError("Please choose valid model to apply. [try list_models()]")
 
@@ -219,7 +242,10 @@ class MostClient(object):
             raise RuntimeError("Please use valid audio_id. [try audio.id from list_audios()]")
 
         resp = self.get(f"https://api.the-most.ai/api/external/{self.client_id}/audio/{audio_id}/model/{self.model_id}/results")
-        return self.retort.load(resp.json(), Result)
+        result = self.retort.load(resp.json(), Result)
+        if modify_scores:
+            result = self.score_modifier.modify(result)
+        return result
 
     def fetch_text(self, audio_id: str) -> Result:
         if not is_valid_id(self.model_id):

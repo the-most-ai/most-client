@@ -55,6 +55,15 @@ class Script(DataClassJsonMixin):
 
 @dataclass_json
 @dataclass
+class ScriptScoreMapping(DataClassJsonMixin):
+    column: str
+    subcolumn: str
+    from_score: int
+    to_score: int
+
+
+@dataclass_json
+@dataclass
 class JobStatus(DataClassJsonMixin):
     status: Literal["not_found", "pending", "completed", "error"]
 
