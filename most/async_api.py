@@ -17,7 +17,7 @@ from most.types import (
     Script,
     StoredAudioData,
     Text,
-    is_valid_id,
+    is_valid_id, SearchParams,
 )
 
 
@@ -301,3 +301,24 @@ class AsyncMostClient(object):
         audio = AudioSegment.from_file(io.BytesIO(resp.content),
                                        format=format)
         return audio
+
+    async def index_audio(self, audio_id: str) -> None:
+        resp = await self.post(f"https://api.the-most.ai/api/external/{self.client_id}/audio/{audio_id}/model/{self.model_id}/indexing")
+        if resp.status_code >= 400:
+            raise RuntimeError("Audio can't be indexed")
+        return None
+
+    async def search(self,
+                     query: str,
+                     filter: SearchParams,
+                     limit: int = 10) -> List[Audio]:
+        resp = await self.post(f"https://api.the-most.ai/api/external/{self.client_id}/model/{self.model_id}/search",
+                               json={
+                                   "query": query,
+                                   "filter": filter.to_dict(),
+                                   "limit": limit,
+                               })
+        if resp.status_code >= 400:
+            raise RuntimeError("Audio can't be indexed")
+        audio_list = resp.json()
+        return self.retort.load(audio_list, List[Audio])

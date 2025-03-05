@@ -113,6 +113,32 @@ class DialogResult(DataClassJsonMixin):
     results: Optional[List[ColumnResult]]
 
 
+@dataclass_json
+@dataclass
+class StoredInfoCondition(DataClassJsonMixin):
+    key: str
+    match: Optional[str] = None
+    starts_with: Optional[str] = None
+    ends_with: Optional[str] = None
+
+
+@dataclass_json
+@dataclass
+class ResultsCondition(DataClassJsonMixin):
+    column: str
+    subcolumn: str
+    score_greater_than: Optional[int] = None
+    score_less_than: Optional[int] = None
+
+
+@dataclass_json
+@dataclass
+class SearchParams(DataClassJsonMixin):
+    must: List[StoredInfoCondition | ResultsCondition]
+    should: List[StoredInfoCondition | ResultsCondition]
+    must_not: List[StoredInfoCondition | ResultsCondition]
+
+
 def is_valid_objectid(oid: str) -> bool:
     """
     Check if a given string is a valid MongoDB ObjectId (24-character hex).
