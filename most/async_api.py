@@ -306,9 +306,11 @@ class AsyncMostClient(object):
         resp = await self.get(f"https://api.the-most.ai/api/external/{self.client_id}/audio/{audio_id}/info")
         return self.retort.load(resp.json(), StoredAudioData)
 
-    async def __call__(self, audio_path: Path):
+    async def __call__(self, audio_path: Path,
+                       modify_scores: bool = False) -> Result:
         audio = await self.upload_audio(audio_path)
-        return await self.apply(audio.id)
+        return await self.apply(audio.id,
+                                modify_scores=modify_scores)
 
     def __repr__(self):
         return "<AsyncMostClient(model_id='%s')>" % (self.model_id, )
