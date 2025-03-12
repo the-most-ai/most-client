@@ -182,6 +182,13 @@ class AsyncMostClient(object):
         audio_list = resp.json()
         return self.retort.load(audio_list, List[Audio])
 
+    async def list_texts(self,
+                         offset: int = 0,
+                         limit: int = 10) -> List[Text]:
+        resp = await self.get(f"https://api.the-most.ai/api/external/{self.client_id}/list_texts?offset={offset}&limit={limit}")
+        texts_list = resp.json()
+        return self.retort.load(texts_list, List[Text])
+
     async def get_model_script(self) -> Script:
         if not is_valid_id(self.model_id):
             raise RuntimeError("Please choose valid model to apply. [try list_models()]")
@@ -218,6 +225,20 @@ class AsyncMostClient(object):
             result = self.score_modifier.modify(result)
         return result
 
+    async def apply_on_text(self, text_id,
+                            modify_scores: bool = False) -> Result:
+        if not is_valid_id(self.model_id):
+            raise RuntimeError("Please choose valid model to apply. [try list_models()]")
+
+        if not is_valid_id(text_id):
+            raise RuntimeError("Please use valid text_id. [try text.id from list_texts()]")
+
+        resp = await self.post(f"https://api.the-most.ai/api/external/{self.client_id}/text/{text_id}/model/{self.model_id}/apply")
+        result = self.retort.load(resp.json(), Result)
+        if modify_scores:
+            result = self.score_modifier.modify(result)
+        return result
+
     async def apply_later(self, audio_id,
                           modify_scores: bool = False) -> Result:
         if not is_valid_id(self.model_id):
@@ -227,6 +248,20 @@ class AsyncMostClient(object):
             raise RuntimeError("Please use valid audio_id. [try audio.id from list_audios()]")
 
         resp = await self.post(f"https://api.the-most.ai/api/external/{self.client_id}/audio/{audio_id}/model/{self.model_id}/apply_async")
+        result = self.retort.load(resp.json(), Result)
+        if modify_scores:
+            result = self.score_modifier.modify(result)
+        return result
+
+    async def apply_on_text_later(self, text_id,
+                                  modify_scores: bool = False) -> Result:
+        if not is_valid_id(self.model_id):
+            raise RuntimeError("Please choose valid model to apply. [try list_models()]")
+
+        if not is_valid_id(text_id):
+            raise RuntimeError("Please use valid text_id. [try audio.id from list_texts()]")
+
+        resp = await self.post(f"https://api.the-most.ai/api/external/{self.client_id}/text/{text_id}/model/{self.model_id}/apply_async")
         result = self.retort.load(resp.json(), Result)
         if modify_scores:
             result = self.score_modifier.modify(result)
