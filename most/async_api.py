@@ -122,6 +122,24 @@ class AsyncMostClient(object):
                 "Content-Type") == "application/json" else "Something went wrong.")
         return resp
 
+    async def put(self, url, **kwargs):
+        if self.access_token is None:
+            await self.refresh_access_token()
+        headers = kwargs.pop("headers", {})
+        headers.update({"Authorization": "Bearer %s" % self.access_token})
+        resp = await self.session.put(url,
+                                      headers=headers,
+                                      timeout=None,
+                                      **kwargs)
+        if resp.status_code == 401:
+            await self.refresh_access_token()
+            return await self.put(url,
+                                  headers=headers,
+                                  **kwargs)
+        if resp.status_code >= 400:
+            raise RuntimeError(resp.json()['message'] if resp.headers.get("Content-Type") == "application/json" else "Something went wrong.")
+        return resp
+
     async def post(self, url,
                    data=None,
                    json=None,
@@ -314,6 +332,17 @@ class AsyncMostClient(object):
             raise RuntimeError("Please use valid audio_id. [try audio.id from list_audios()]")
 
         resp = await self.get(f"https://api.the-most.ai/api/external/{self.client_id}/audio/{audio_id}/model/{self.model_id}/dialog")
+        return self.retort.load(resp.json(), DialogResult)
+
+    async def update_dialog(self, audio_id, dialog: Dialog) -> DialogResult:
+        if not is_valid_id(self.model_id):
+            raise RuntimeError("Please choose valid model to apply. [try list_models()]")
+
+        if not is_valid_id(audio_id):
+            raise RuntimeError("Please use valid audio_id. [try audio.id from list_audios()]")
+
+        resp = await self.put(f"https://api.the-most.ai/api/external/{self.client_id}/audio/{audio_id}/model/{self.model_id}/dialog",
+                              json={"dialog": dialog.to_dict()})
         return self.retort.load(resp.json(), DialogResult)
 
     async def export(self, audio_ids: List[str],
