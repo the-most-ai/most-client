@@ -18,7 +18,7 @@ from most.types import (
     Script,
     StoredAudioData,
     Text,
-    is_valid_id, SearchParams, ScriptScoreMapping,
+    is_valid_id, SearchParams, ScriptScoreMapping, Dialog,
 )
 
 
@@ -169,6 +169,11 @@ class AsyncMostClient(object):
         resp = await self.post(f"https://api.the-most.ai/api/external/{self.client_id}/upload_text",
                                json={"text": text})
         return self.retort.load(resp.json(), Text)
+
+    async def upload_dialog(self, dialog: Dialog) -> DialogResult:
+        resp = await self.post(f"https://api.the-most.ai/api/external/{self.client_id}/upload_dialog",
+                               json={"dialog": dialog})
+        return self.retort.load(resp.json(), DialogResult)
 
     async def upload_audio_url(self, audio_url) -> Audio:
         resp = await self.post(f"https://api.the-most.ai/api/external/{self.client_id}/upload_url",

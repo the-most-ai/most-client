@@ -18,7 +18,7 @@ from most.types import (
     Script,
     StoredAudioData,
     Text,
-    is_valid_id, SearchParams, ScriptScoreMapping,
+    is_valid_id, SearchParams, ScriptScoreMapping, Dialog,
 )
 
 
@@ -143,6 +143,11 @@ class MostClient(object):
         resp = self.post(f"https://api.the-most.ai/api/external/{self.client_id}/upload_text",
                          files={"text": text})
         return self.retort.load(resp.json(), Text)
+
+    def upload_dialog(self, dialog: Dialog) -> DialogResult:
+        resp = self.post(f"https://api.the-most.ai/api/external/{self.client_id}/upload_dialog",
+                         json={"dialog": dialog})
+        return self.retort.load(resp.json(), DialogResult)
 
     def upload_audio(self, audio_path) -> Audio:
         with open(audio_path, 'rb') as f:
