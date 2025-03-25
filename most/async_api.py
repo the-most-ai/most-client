@@ -2,13 +2,12 @@ import io
 import os
 import uuid
 from pathlib import Path
-from typing import Dict, List, Optional
-
+from typing import Dict, List, Optional, Union
 import httpx
 import json5
 from adaptix import Retort
 from pydub import AudioSegment
-
+from most._constrants import DEFAULT_MAX_RETRIES
 from most.score_calculation import ScoreCalculation
 from most.types import (
     Audio,
@@ -28,7 +27,13 @@ class AsyncMostClient(object):
     def __init__(self,
                  client_id=None,
                  client_secret=None,
-                 model_id=None):
+                 model_id=None,
+
+                 base_url: str | httpx.URL | None = None,
+                 timeout: Union[float, httpx.Timeout] = 1e10,
+                 max_retries: int = DEFAULT_MAX_RETRIES,
+                 # retry_delay: float = 0,
+                 http_client: httpx.AsyncClient | None = None):
         super(AsyncMostClient, self).__init__()
         self.client_id = client_id
         self.client_secret = client_secret
@@ -46,7 +51,19 @@ class AsyncMostClient(object):
         else:
             self.save_credentials()
 
-        self.session = httpx.AsyncClient()
+        if base_url is None:
+            base_url = os.environ.get("MOST_BASE_URL")
+        if base_url is None:
+            base_url = f"https://api.the-most.ai/api/external"
+
+        if http_client is None:
+            http_client = httpx.AsyncClient(base_url=base_url,
+                                            timeout=timeout,
+                                            follow_redirects=True,
+                                            transport=httpx.AsyncHTTPTransport(retries=max_retries))
+        # self.max_retries = max_retries
+        # self.retry_delay = retry_delay
+        self.session = http_client
         self.access_token = None
         self.model_id = model_id
         self.score_modifier: Optional[ScoreCalculation] = None
@@ -97,7 +114,7 @@ class AsyncMostClient(object):
         return client
 
     async def refresh_access_token(self):
-        resp = await self.session.post("https://api.the-most.ai/api/external/access_token",
+        resp = await self.session.post("/access_token",
                                        json={"client_id": self.client_id,
                                              "client_secret": self.client_secret})
         access_token = resp.json()
@@ -117,9 +134,10 @@ class AsyncMostClient(object):
             return await self.get(url,
                                   headers=headers,
                                   **kwargs)
-        if resp.status_code >= 400:
-            raise RuntimeError(resp.json()['message'] if resp.headers.get(
-                "Content-Type") == "application/json" else "Something went wrong.")
+
+        if resp.headers.get("Content-Type") == "application/json":
+            raise RuntimeError(resp.json()['message'])
+        resp.raise_for_status()
         return resp
 
     async def put(self, url, **kwargs):
@@ -168,7 +186,7 @@ class AsyncMostClient(object):
 
     async def upload_audio(self, audio_path) -> Audio:
         with open(audio_path, mode='rb') as f:
-            resp = await self.post(f"https://api.the-most.ai/api/external/{self.client_id}/upload",
+            resp = await self.post(f"/{self.client_id}/upload",
                                    files={"audio_file": f})
         return self.retort.load(resp.json(), Audio)
 
@@ -179,36 +197,36 @@ class AsyncMostClient(object):
         f.seek(0)
         if audio_name is None:
             audio_name = uuid.uuid4().hex + ".mp3"
-        resp = await self.post(f"https://api.the-most.ai/api/external/{self.client_id}/upload",
+        resp = await self.post(f"/{self.client_id}/upload",
                                files={"audio_file": (audio_name, f, 'audio/mp3')})
         return self.retort.load(resp.json(), Audio)
 
     async def upload_text(self, text: str) -> Text:
-        resp = await self.post(f"https://api.the-most.ai/api/external/{self.client_id}/upload_text",
+        resp = await self.post(f"/{self.client_id}/upload_text",
                                json={"text": text})
         return self.retort.load(resp.json(), Text)
 
     async def upload_dialog(self, dialog: Dialog) -> DialogResult:
-        resp = await self.post(f"https://api.the-most.ai/api/external/{self.client_id}/upload_dialog",
+        resp = await self.post(f"/{self.client_id}/upload_dialog",
                                json={"dialog": dialog})
         return self.retort.load(resp.json(), DialogResult)
 
     async def upload_audio_url(self, audio_url) -> Audio:
-        resp = await self.post(f"https://api.the-most.ai/api/external/{self.client_id}/upload_url",
+        resp = await self.post(f"/{self.client_id}/upload_url",
                                json={"audio_url": audio_url})
         return self.retort.load(resp.json(), Audio)
 
     async def list_audios(self,
                           offset: int = 0,
                           limit: int = 10) -> List[Audio]:
-        resp = await self.get(f"https://api.the-most.ai/api/external/{self.client_id}/list?offset={offset}&limit={limit}")
+        resp = await self.get(f"/{self.client_id}/list?offset={offset}&limit={limit}")
         audio_list = resp.json()
         return self.retort.load(audio_list, List[Audio])
 
     async def list_texts(self,
                          offset: int = 0,
                          limit: int = 10) -> List[Text]:
-        resp = await self.get(f"https://api.the-most.ai/api/external/{self.client_id}/list_texts?offset={offset}&limit={limit}")
+        resp = await self.get(f"/{self.client_id}/list_texts?offset={offset}&limit={limit}")
         texts_list = resp.json()
         return self.retort.load(texts_list, List[Text])
 
@@ -216,7 +234,7 @@ class AsyncMostClient(object):
         if not is_valid_id(self.model_id):
             raise RuntimeError("Please choose valid model to apply. [try list_models()]")
 
-        resp = await self.get(f"https://api.the-most.ai/api/external/{self.client_id}/model/{self.model_id}/script")
+        resp = await self.get(f"/{self.client_id}/model/{self.model_id}/script")
         return self.retort.load(resp.json(), Script)
 
     async def get_score_modifier(self):
@@ -224,13 +242,13 @@ class AsyncMostClient(object):
             if not is_valid_id(self.model_id):
                 raise RuntimeError("Please choose valid model to apply. [try list_models()]")
 
-            resp = await self.get(f"https://api.the-most.ai/api/external/{self.client_id}/model/{self.model_id}/score_mapping")
+            resp = await self.get(f"/{self.client_id}/model/{self.model_id}/score_mapping")
             score_mapping = self.retort.load(resp.json(), List[ScriptScoreMapping])
             self.score_modifier = ScoreCalculation(score_mapping)
         return self.score_modifier
 
     async def list_models(self):
-        resp = await self.get("https://api.the-most.ai/api/external/list_models")
+        resp = await self.get("/list_models")
         return [self.with_model(model['model'])
                 for model in resp.json()]
 
@@ -242,7 +260,7 @@ class AsyncMostClient(object):
         if not is_valid_id(audio_id):
             raise RuntimeError("Please use valid audio_id. [try audio.id from list_audios()]")
 
-        resp = await self.post(f"https://api.the-most.ai/api/external/{self.client_id}/audio/{audio_id}/model/{self.model_id}/apply")
+        resp = await self.post(f"/{self.client_id}/audio/{audio_id}/model/{self.model_id}/apply")
         result = self.retort.load(resp.json(), Result)
         if modify_scores:
             result = self.score_modifier.modify(result)
@@ -256,7 +274,7 @@ class AsyncMostClient(object):
         if not is_valid_id(text_id):
             raise RuntimeError("Please use valid text_id. [try text.id from list_texts()]")
 
-        resp = await self.post(f"https://api.the-most.ai/api/external/{self.client_id}/text/{text_id}/model/{self.model_id}/apply")
+        resp = await self.post(f"/{self.client_id}/text/{text_id}/model/{self.model_id}/apply")
         result = self.retort.load(resp.json(), Result)
         if modify_scores:
             result = self.score_modifier.modify(result)
@@ -270,7 +288,7 @@ class AsyncMostClient(object):
         if not is_valid_id(audio_id):
             raise RuntimeError("Please use valid audio_id. [try audio.id from list_audios()]")
 
-        resp = await self.post(f"https://api.the-most.ai/api/external/{self.client_id}/audio/{audio_id}/model/{self.model_id}/apply_async")
+        resp = await self.post(f"/{self.client_id}/audio/{audio_id}/model/{self.model_id}/apply_async")
         result = self.retort.load(resp.json(), Result)
         if modify_scores:
             result = self.score_modifier.modify(result)
@@ -284,7 +302,7 @@ class AsyncMostClient(object):
         if not is_valid_id(text_id):
             raise RuntimeError("Please use valid text_id. [try audio.id from list_texts()]")
 
-        resp = await self.post(f"https://api.the-most.ai/api/external/{self.client_id}/text/{text_id}/model/{self.model_id}/apply_async")
+        resp = await self.post(f"/{self.client_id}/text/{text_id}/model/{self.model_id}/apply_async")
         result = self.retort.load(resp.json(), Result)
         if modify_scores:
             result = self.score_modifier.modify(result)
@@ -297,7 +315,7 @@ class AsyncMostClient(object):
         if not is_valid_id(audio_id):
             raise RuntimeError("Please use valid audio_id. [try audio.id from list_audios()]")
 
-        resp = await self.post(f"https://api.the-most.ai/api/external/{self.client_id}/audio/{audio_id}/model/{self.model_id}/apply_status")
+        resp = await self.post(f"/{self.client_id}/audio/{audio_id}/model/{self.model_id}/apply_status")
         return self.retort.load(resp.json(), JobStatus)
 
     async def fetch_results(self, audio_id,
@@ -308,7 +326,7 @@ class AsyncMostClient(object):
         if not is_valid_id(audio_id):
             raise RuntimeError("Please use valid audio_id. [try audio.id from list_audios()]")
 
-        resp = await self.get(f"https://api.the-most.ai/api/external/{self.client_id}/audio/{audio_id}/model/{self.model_id}/results")
+        resp = await self.get(f"/{self.client_id}/audio/{audio_id}/model/{self.model_id}/results")
         result = self.retort.load(resp.json(), Result)
         if modify_scores:
             result = self.score_modifier.modify(result)
@@ -321,7 +339,7 @@ class AsyncMostClient(object):
         if not is_valid_id(audio_id):
             raise RuntimeError("Please use valid audio_id. [try audio.id from list_audios()]")
 
-        resp = await self.get(f"https://api.the-most.ai/api/external/{self.client_id}/audio/{audio_id}/model/{self.model_id}/text")
+        resp = await self.get(f"/{self.client_id}/audio/{audio_id}/model/{self.model_id}/text")
         return self.retort.load(resp.json(), Result)
 
     async def fetch_dialog(self, audio_id) -> DialogResult:
@@ -331,7 +349,7 @@ class AsyncMostClient(object):
         if not is_valid_id(audio_id):
             raise RuntimeError("Please use valid audio_id. [try audio.id from list_audios()]")
 
-        resp = await self.get(f"https://api.the-most.ai/api/external/{self.client_id}/audio/{audio_id}/model/{self.model_id}/dialog")
+        resp = await self.get(f"/{self.client_id}/audio/{audio_id}/model/{self.model_id}/dialog")
         return self.retort.load(resp.json(), DialogResult)
 
     async def update_dialog(self, audio_id, dialog: Dialog) -> DialogResult:
@@ -341,7 +359,7 @@ class AsyncMostClient(object):
         if not is_valid_id(audio_id):
             raise RuntimeError("Please use valid audio_id. [try audio.id from list_audios()]")
 
-        resp = await self.put(f"https://api.the-most.ai/api/external/{self.client_id}/audio/{audio_id}/model/{self.model_id}/dialog",
+        resp = await self.put(f"/{self.client_id}/audio/{audio_id}/model/{self.model_id}/dialog",
                               json={"dialog": dialog.to_dict()})
         return self.retort.load(resp.json(), DialogResult)
 
@@ -354,7 +372,7 @@ class AsyncMostClient(object):
         if not is_valid_id(self.model_id):
             raise RuntimeError("Please choose valid model to apply. [try list_models()]")
 
-        resp = await self.get(f"https://api.the-most.ai/api/external/{self.client_id}/model/{self.model_id}/export",
+        resp = await self.get(f"/{self.client_id}/model/{self.model_id}/export",
                               params={'audio_ids': ','.join(audio_ids),
                                       "aggregated_by": aggregated_by,
                                       "aggregation_title": aggregation_title})
@@ -363,7 +381,7 @@ class AsyncMostClient(object):
     async def store_info(self,
                          audio_id: str,
                          data: Dict[str, str]):
-        resp = await self.post(f"https://api.the-most.ai/api/external/{self.client_id}/audio/{audio_id}/info",
+        resp = await self.post(f"/{self.client_id}/audio/{audio_id}/info",
                                json={
                                    "data": data,
                                })
@@ -372,7 +390,7 @@ class AsyncMostClient(object):
     async def fetch_info(self, audio_id: str) -> Dict[str, str]:
         if not is_valid_id(audio_id):
             raise RuntimeError("Please use valid audio_id. [try audio.id from list_audios()]")
-        resp = await self.get(f"https://api.the-most.ai/api/external/{self.client_id}/audio/{audio_id}/info")
+        resp = await self.get(f"/{self.client_id}/audio/{audio_id}/info")
         return self.retort.load(resp.json(), StoredAudioData)
 
     async def __call__(self, audio_path: Path,
@@ -400,7 +418,7 @@ class AsyncMostClient(object):
         return audio
 
     async def index_audio(self, audio_id: str) -> None:
-        resp = await self.post(f"https://api.the-most.ai/api/external/{self.client_id}/audio/{audio_id}/model/{self.model_id}/indexing")
+        resp = await self.post(f"/{self.client_id}/audio/{audio_id}/model/{self.model_id}/indexing")
         if resp.status_code >= 400:
             raise RuntimeError("Audio can't be indexed")
         return None
@@ -409,7 +427,7 @@ class AsyncMostClient(object):
                      query: str,
                      filter: SearchParams,
                      limit: int = 10) -> List[Audio]:
-        resp = await self.post(f"https://api.the-most.ai/api/external/{self.client_id}/model/{self.model_id}/search",
+        resp = await self.post(f"/{self.client_id}/model/{self.model_id}/search",
                                json={
                                    "query": query,
                                    "filter": filter.to_dict(),
