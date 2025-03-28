@@ -1,5 +1,6 @@
 import re
 from dataclasses import dataclass
+from datetime import datetime
 from typing import Dict, List, Literal, Optional
 
 from dataclasses_json import DataClassJsonMixin, dataclass_json
@@ -75,6 +76,8 @@ class Result(DataClassJsonMixin):
     text: Optional[str]
     url: Optional[str]
     results: Optional[List[ColumnResult]]
+    created_at: Optional[datetime]
+    applied_at: Optional[datetime]
 
     def get_script(self) -> Optional[Script]:
         if self.results is None:
