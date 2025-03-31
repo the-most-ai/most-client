@@ -30,8 +30,8 @@ class Text(DataClassJsonMixin):
 @dataclass
 class SubcolumnResult(DataClassJsonMixin):
     name: str
-    score: Optional[int]
-    description: str
+    score: Optional[int] = None
+    description: str = ""
 
 
 @dataclass_json
@@ -73,11 +73,11 @@ class JobStatus(DataClassJsonMixin):
 @dataclass
 class Result(DataClassJsonMixin):
     id: str
-    text: Optional[str]
-    url: Optional[str]
-    results: Optional[List[ColumnResult]]
-    created_at: Optional[datetime]
-    applied_at: Optional[datetime]
+    text: Optional[str] = None
+    url: Optional[str] = None
+    results: Optional[List[ColumnResult]] = None
+    created_at: Optional[datetime] = None
+    applied_at: Optional[datetime] = None
 
     def get_script(self) -> Optional[Script]:
         if self.results is None:
@@ -120,9 +120,9 @@ class Dialog(DataClassJsonMixin):
 @dataclass
 class DialogResult(DataClassJsonMixin):
     id: str
-    dialog: Optional[Dialog]
-    url: Optional[str]
-    results: Optional[List[ColumnResult]]
+    dialog: Optional[Dialog] = None
+    url: Optional[str] = None
+    results: Optional[List[ColumnResult]] = None
 
 
 @dataclass_json
