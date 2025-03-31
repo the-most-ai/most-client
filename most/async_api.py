@@ -1,11 +1,12 @@
 import io
 import os
 import uuid
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Dict, List, Optional, Union
 import httpx
 import json5
-from adaptix import Retort
+from adaptix import Retort, loader
 from pydub import AudioSegment
 from most._constrants import DEFAULT_MAX_RETRIES
 from most.score_calculation import ScoreCalculation
@@ -22,7 +23,11 @@ from most.types import (
 
 
 class AsyncMostClient(object):
-    retort = Retort()
+    retort = Retort(recipe=[
+        loader(int, lambda x: int(x)),
+        loader(float, lambda x: float(x)),
+        loader(datetime, lambda x: datetime.fromtimestamp(x).replace(tzinfo=timezone.utc)),
+    ])
 
     def __init__(self,
                  client_id=None,
