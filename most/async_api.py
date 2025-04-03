@@ -140,8 +140,8 @@ class AsyncMostClient(object):
                                   headers=headers,
                                   **kwargs)
 
-        if resp.headers.get("Content-Type") == "application/json":
-            raise RuntimeError(resp.json()['message'])
+        if resp.status_code >= 400:
+            raise RuntimeError(resp.json()['message'] if resp.headers.get("Content-Type") == "application/json" else "Something went wrong.")
         resp.raise_for_status()
         return resp
 
