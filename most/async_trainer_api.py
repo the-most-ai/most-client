@@ -18,4 +18,6 @@ class AsyncTrainer(object):
         raise NotImplementedError()
 
     async def get_data_points(self) -> List[HumanFeedback]:
-        raise NotImplementedError()
+        resp = await self.client.get(f"/{self.client.client_id}/model/{self.client.model_id}/data")
+        audio_list = resp.json()
+        return self.client.retort.load(audio_list, List[HumanFeedback])
