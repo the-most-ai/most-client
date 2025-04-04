@@ -1,7 +1,7 @@
 import re
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Dict, List, Literal, Optional
+from typing import Dict, List, Literal, Optional, Union
 
 from dataclasses_json import DataClassJsonMixin, dataclass_json
 
@@ -149,6 +149,27 @@ class SearchParams(DataClassJsonMixin):
     must: List[StoredInfoCondition | ResultsCondition]
     should: List[StoredInfoCondition | ResultsCondition]
     must_not: List[StoredInfoCondition | ResultsCondition]
+
+
+@dataclass_json
+@dataclass
+class HumanFeedback(DataClassJsonMixin):
+    data_point: Union[Audio, Text]
+    column: Column
+    subcolumn_idx: int
+    score: int
+    description: str = ""
+
+    @classmethod
+    def calculate_accuracy(cls,
+                           preds: List["HumanFeedback"],
+                           gt: List["HumanFeedback"]) -> float:
+        preds = {(y_pred.data_point.id, y_pred.column.name, y_pred.subcolumn_idx): y_pred.score
+                 for y_pred in preds}
+        gt = {(y_true.data_point.id, y_true.column.name, y_true.subcolumn_idx): y_true.score
+              for y_true in gt}
+        common_keys = set(preds.keys()) & set(gt.keys())
+        return sum((preds[key] == gt[key]) for key in common_keys) / len(common_keys)
 
 
 def is_valid_objectid(oid: str) -> bool:
