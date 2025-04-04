@@ -154,9 +154,10 @@ class SearchParams(DataClassJsonMixin):
 @dataclass_json
 @dataclass
 class HumanFeedback(DataClassJsonMixin):
-    data_point: Union[Audio, Text]
-    column: Column
-    subcolumn_idx: int
+    data_point_id: str
+    data_point_type: Literal["audio", "text"]
+    column_name: str
+    subcolumn_name: str
     score: int
     description: str = ""
 
@@ -164,9 +165,9 @@ class HumanFeedback(DataClassJsonMixin):
     def calculate_accuracy(cls,
                            preds: List["HumanFeedback"],
                            gt: List["HumanFeedback"]) -> float:
-        preds = {(y_pred.data_point.id, y_pred.column.name, y_pred.subcolumn_idx): y_pred.score
+        preds = {(y_pred.data_point_id, y_pred.column_name, y_pred.subcolumn_name): y_pred.score
                  for y_pred in preds}
-        gt = {(y_true.data_point.id, y_true.column.name, y_true.subcolumn_idx): y_true.score
+        gt = {(y_true.data_point_id, y_true.column_name, y_true.subcolumn_name): y_true.score
               for y_true in gt}
         common_keys = set(preds.keys()) & set(gt.keys())
         return sum((preds[key] == gt[key]) for key in common_keys) / len(common_keys)
