@@ -18,7 +18,7 @@ from most.types import (
     Script,
     StoredAudioData,
     Text,
-    is_valid_id, SearchParams, ScriptScoreMapping, Dialog,
+    is_valid_id, SearchParams, ScriptScoreMapping, Dialog, Usage,
 )
 
 
@@ -26,7 +26,7 @@ class MostClient(object):
     retort = Retort(recipe=[
         loader(int, lambda x: int(x)),
         loader(float, lambda x: float(x)),
-        loader(datetime, lambda x: datetime.fromtimestamp(x).replace(tzinfo=timezone.utc)),
+        loader(datetime, lambda x: datetime.fromtimestamp(x).astimezone(tz=timezone.utc) if isinstance(x, (int, float)) else datetime.fromisoformat(x)),
     ],)
 
     def __init__(self,
@@ -444,3 +444,12 @@ class MostClient(object):
             raise RuntimeError("Audio can't be indexed")
         audio_list = resp.json()
         return self.retort.load(audio_list, List[Audio])
+
+    def get_usage(self,
+                  start_dt: datetime,
+                  end_dt: datetime):
+        resp = self.get(f"/{self.client_id}/model/{self.model_id}/usage",
+                        params={'start_dt': start_dt.astimezone(timezone.utc).isoformat(),
+                                'end_dt': end_dt.astimezone(timezone.utc).isoformat()})
+        resp.raise_for_status()
+        return self.retort.load(resp.json(), Usage)

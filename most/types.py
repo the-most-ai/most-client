@@ -173,6 +173,25 @@ class HumanFeedback(DataClassJsonMixin):
         return sum((preds[key] == gt[key]) for key in common_keys) / len(common_keys)
 
 
+@dataclass_json
+@dataclass
+class Usage(DataClassJsonMixin):
+    apply_audio_async: int
+    apply_audio_async_duration: int
+    apply_text_async: int
+
+    apply_audio: int
+    apply_audio_duration: int
+    apply_text: int
+
+    upload_audio: int
+    upload_audio_duration: int
+    upload_text: int
+
+    start_dt: datetime
+    end_dt: datetime
+
+
 def is_valid_objectid(oid: str) -> bool:
     """
     Check if a given string is a valid MongoDB ObjectId (24-character hex).
