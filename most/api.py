@@ -133,7 +133,7 @@ class MostClient(object):
                             headers=headers,
                             **kwargs)
         if resp.status_code >= 400:
-            raise RuntimeError(resp.json()['message'] if resp.headers.get("Content-Type") == "application/json" else "Something went wrong.")
+            raise RuntimeError(resp.json()['message'] if resp.headers.get("Content-Type") == "application/json" else resp.content)
         return resp
 
     def put(self, url, **kwargs):
@@ -151,7 +151,7 @@ class MostClient(object):
                             headers=headers,
                             **kwargs)
         if resp.status_code >= 400:
-            raise RuntimeError(resp.json()['message'] if resp.headers.get("Content-Type") == "application/json" else "Something went wrong.")
+            raise RuntimeError(resp.json()['message'] if resp.headers.get("Content-Type") == "application/json" else resp.content)
         return resp
 
     def post(self, url,
@@ -393,7 +393,7 @@ class MostClient(object):
                          })
         return self.retort.load(resp.json(), StoredAudioData)
 
-    def fetch_info(self, audio_id: str) -> Dict[str, str]:
+    def fetch_info(self, audio_id: str) -> Dict[str, str | int | float]:
         if not is_valid_id(audio_id):
             raise RuntimeError("Please use valid audio_id. [try audio.id from list_audios()]")
 
