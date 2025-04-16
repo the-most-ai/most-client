@@ -400,7 +400,7 @@ class AsyncMostClient(object):
                                })
         return self.retort.load(resp.json(), StoredAudioData)
 
-    async def fetch_info(self, audio_id: str) -> Dict[str, str | int | float]:
+    async def fetch_info(self, audio_id: str) -> Dict[str, str]:
         if not is_valid_id(audio_id):
             raise RuntimeError("Please use valid audio_id. [try audio.id from list_audios()]")
         resp = await self.get(f"/{self.client_id}/audio/{audio_id}/info")

@@ -393,7 +393,7 @@ class MostClient(object):
                          })
         return self.retort.load(resp.json(), StoredAudioData)
 
-    def fetch_info(self, audio_id: str) -> Dict[str, str | int | float]:
+    def fetch_info(self, audio_id: str) -> Dict[str, str]:
         if not is_valid_id(audio_id):
             raise RuntimeError("Please use valid audio_id. [try audio.id from list_audios()]")
 
