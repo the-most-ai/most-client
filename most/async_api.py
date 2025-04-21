@@ -223,8 +223,12 @@ class AsyncMostClient(object):
 
     async def list_audios(self,
                           offset: int = 0,
-                          limit: int = 10) -> List[Audio]:
-        resp = await self.get(f"/{self.client_id}/list?offset={offset}&limit={limit}")
+                          limit: int = 10,
+                          query: Optional[Dict[str, str]] = None) -> List[Audio]:
+        if query is None:
+            query = {}
+        resp = await self.get(f"/{self.client_id}/list?offset={offset}&limit={limit}",
+                              params=query)
         audio_list = resp.json()
         return self.retort.load(audio_list, List[Audio])
 
