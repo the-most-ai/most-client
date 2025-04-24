@@ -283,6 +283,18 @@ class MostClient(object):
             result = self.score_modifier.modify(result)
         return result
 
+    def transcribe_later(self, audio_id,
+                         overwrite: bool = False) -> DialogResult:
+        if not is_valid_id(self.model_id):
+            raise RuntimeError("Please choose valid model to apply. [try list_models()]")
+
+        if not is_valid_id(audio_id):
+            raise RuntimeError("Please use valid audio_id. [try audio.id from list_audios()]")
+
+        resp = self.post(f"/{self.client_id}/audio/{audio_id}/model/{self.model_id}/transcribe_async",
+                         params={"overwrite": overwrite})
+        return self.retort.load(resp.json(), DialogResult)
+
     def apply_later(self, audio_id,
                     modify_scores: bool = False,
                     overwrite: bool = False) -> Result:
