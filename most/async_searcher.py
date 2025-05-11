@@ -1,6 +1,7 @@
 from typing import List, Literal, Optional
 from . import AsyncMostClient
-from .types import SearchParams, Audio
+from .types import Audio
+from .search_types import SearchParams
 
 
 class AsyncMostSearcher(object):

@@ -18,7 +18,7 @@ from most.types import (
     Script,
     StoredAudioData,
     Text,
-    is_valid_id, SearchParams, ScriptScoreMapping, Dialog, Usage,
+    is_valid_id, ScriptScoreMapping, Dialog, Usage,
 )
 
 

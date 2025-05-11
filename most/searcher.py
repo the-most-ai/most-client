@@ -1,7 +1,8 @@
 from typing import List, Literal, Optional
 
 from .api import MostClient
-from .types import SearchParams, Audio
+from .search_types import SearchParams
+from .types import Audio, Text
 
 
 class MostSearcher(object):
@@ -42,7 +43,7 @@ class MostSearcher(object):
 
     def search(self,
                filter: Optional[SearchParams] = None,
-               limit: int = 10) -> List[Audio]:
+               limit: int = 10) -> List[Audio | Text]:
         if filter is None:
             filter = SearchParams()
         resp = self.client.get(f"/{self.client.client_id}/{self.data_source}/search",

@@ -1,9 +1,8 @@
 import re
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from datetime import datetime
-from typing import Dict, List, Literal, Optional, Union
-
-from bson import ObjectId
+from typing import Dict, List, Literal, Optional
+from .search_types import ResultsCondition
 from dataclasses_json import DataClassJsonMixin, dataclass_json
 
 
@@ -53,6 +52,22 @@ class Column(DataClassJsonMixin):
 @dataclass
 class Script(DataClassJsonMixin):
     columns: List[Column]
+
+    def create_results_condition(self,
+                                 model_id: str,
+                                 column: str, subcolumn: str,
+                                 score_equal: Optional[int] = None,
+                                 score_greater_than: Optional[int] = None,
+                                 score_less_than: Optional[int] = None) -> ResultsCondition:
+
+        column_idx = [column.name for column in self.columns].index(column)
+        subcolumn_idx = self.columns[column_idx].subcolumns.index(subcolumn)
+        return ResultsCondition(model_id=model_id,
+                                column_idx=column_idx,
+                                subcolumn_idx=subcolumn_idx,
+                                score_equal=score_equal,
+                                score_greater_than=score_greater_than,
+                                score_less_than=score_less_than)
 
 
 @dataclass_json
@@ -124,55 +139,6 @@ class DialogResult(DataClassJsonMixin):
     dialog: Optional[Dialog] = None
     url: Optional[str] = None
     results: Optional[List[ColumnResult]] = None
-
-
-@dataclass_json
-@dataclass
-class IDCondition(DataClassJsonMixin):
-    equal: Optional[ObjectId] = None
-    greater_than: Optional[ObjectId] = None
-    less_than: Optional[ObjectId] = None
-
-
-@dataclass_json
-@dataclass
-class ChannelsCondition(DataClassJsonMixin):
-    equal: Optional[int] = None
-
-
-@dataclass_json
-@dataclass
-class DurationCondition(DataClassJsonMixin):
-    greater_than: Optional[int] = None
-    less_than: Optional[int] = None
-
-
-@dataclass_json
-@dataclass
-class StoredInfoCondition(DataClassJsonMixin):
-    key: str
-    match: Optional[str] = None
-    starts_with: Optional[str] = None
-    ends_with: Optional[str] = None
-
-
-@dataclass_json
-@dataclass
-class ResultsCondition(DataClassJsonMixin):
-    column: str
-    subcolumn: str
-    score_equal: Optional[int] = None
-    score_greater_than: Optional[int] = None
-    score_less_than: Optional[int] = None
-
-
-@dataclass_json
-@dataclass
-class SearchParams(DataClassJsonMixin):
-    must: List[StoredInfoCondition | ResultsCondition | DurationCondition | ChannelsCondition | IDCondition ] = field(default_factory=list)
-    should: List[StoredInfoCondition | ResultsCondition | DurationCondition | ChannelsCondition | IDCondition ] = field(default_factory=list)
-    must_not: List[StoredInfoCondition | ResultsCondition | DurationCondition | ChannelsCondition | IDCondition ] = field(default_factory=list)
-    should_not: List[StoredInfoCondition | ResultsCondition | DurationCondition | ChannelsCondition | IDCondition ] = field(default_factory=list)
 
 
 @dataclass_json
