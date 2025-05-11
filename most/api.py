@@ -18,7 +18,7 @@ from most.types import (
     Script,
     StoredAudioData,
     Text,
-    is_valid_id, SearchParams, ScriptScoreMapping, Dialog, Usage,
+    is_valid_id, ScriptScoreMapping, Dialog, Usage,
 )
 
 
@@ -384,7 +384,8 @@ class MostClient(object):
 
     def export(self, audio_ids: List[str],
                aggregated_by: Optional[str] = None,
-               aggregation_title: Optional[str] = None) -> str:
+               aggregation_title: Optional[str] = None,
+               modify_scores: bool = False) -> str:
         if aggregation_title is None:
             aggregation_title = aggregated_by
 
@@ -394,12 +395,13 @@ class MostClient(object):
         resp = self.get(f"/{self.client_id}/model/{self.model_id}/export",
                         params={'audio_ids': ','.join(audio_ids),
                                 'aggregated_by': aggregated_by,
-                                'aggregation_title': aggregation_title})
+                                'aggregation_title': aggregation_title,
+                                'modify_scores': modify_scores})
         return resp.url
 
     def store_info(self,
                    audio_id: str,
-                   data: Dict[str, str]):
+                   data: Dict[str, str]) -> StoredAudioData:
         if not is_valid_id(audio_id):
             raise RuntimeError("Please use valid audio_id. [try audio.id from list_audios()]")
 
@@ -409,7 +411,7 @@ class MostClient(object):
                          })
         return self.retort.load(resp.json(), StoredAudioData)
 
-    def fetch_info(self, audio_id: str) -> Dict[str, str]:
+    def fetch_info(self, audio_id: str) -> StoredAudioData:
         if not is_valid_id(audio_id):
             raise RuntimeError("Please use valid audio_id. [try audio.id from list_audios()]")
 
@@ -445,21 +447,6 @@ class MostClient(object):
         if resp.status_code >= 400:
             raise RuntimeError("Audio can't be indexed")
         return None
-
-    def search(self,
-               query: str,
-               filter: SearchParams,
-               limit: int = 10) -> List[Audio]:
-        resp = self.post(f"/{self.client_id}/model/{self.model_id}/search",
-                         json={
-                             "query": query,
-                             "filter": filter.to_dict(),
-                             "limit": limit,
-                         })
-        if resp.status_code >= 400:
-            raise RuntimeError("Audio can't be indexed")
-        audio_list = resp.json()
-        return self.retort.load(audio_list, List[Audio])
 
     def get_usage(self,
                   start_dt: datetime,

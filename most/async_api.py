@@ -394,7 +394,8 @@ class AsyncMostClient(object):
 
     async def export(self, audio_ids: List[str],
                      aggregated_by: Optional[str] = None,
-                     aggregation_title: Optional[str] = None) -> str:
+                     aggregation_title: Optional[str] = None,
+                     modify_scores: bool = False) -> str:
         if aggregation_title is None:
             aggregation_title = aggregated_by
 
@@ -404,19 +405,20 @@ class AsyncMostClient(object):
         resp = await self.get(f"/{self.client_id}/model/{self.model_id}/export",
                               params={'audio_ids': ','.join(audio_ids),
                                       "aggregated_by": aggregated_by,
-                                      "aggregation_title": aggregation_title})
+                                      "aggregation_title": aggregation_title,
+                                      "modify_scores": modify_scores})
         return resp.next_request.url
 
     async def store_info(self,
                          audio_id: str,
-                         data: Dict[str, str]):
+                         data: Dict[str, str]) -> StoredAudioData:
         resp = await self.post(f"/{self.client_id}/audio/{audio_id}/info",
                                json={
                                    "data": data,
                                })
         return self.retort.load(resp.json(), StoredAudioData)
 
-    async def fetch_info(self, audio_id: str) -> Dict[str, str]:
+    async def fetch_info(self, audio_id: str) -> StoredAudioData:
         if not is_valid_id(audio_id):
             raise RuntimeError("Please use valid audio_id. [try audio.id from list_audios()]")
         resp = await self.get(f"/{self.client_id}/audio/{audio_id}/info")
@@ -451,21 +453,6 @@ class AsyncMostClient(object):
         if resp.status_code >= 400:
             raise RuntimeError("Audio can't be indexed")
         return None
-
-    async def search(self,
-                     query: str,
-                     filter: SearchParams,
-                     limit: int = 10) -> List[Audio]:
-        resp = await self.post(f"/{self.client_id}/model/{self.model_id}/search",
-                               json={
-                                   "query": query,
-                                   "filter": filter.to_dict(),
-                                   "limit": limit,
-                               })
-        if resp.status_code >= 400:
-            raise RuntimeError("Audio can't be indexed")
-        audio_list = resp.json()
-        return self.retort.load(audio_list, List[Audio])
 
     async def get_usage(self,
                         start_dt: datetime,
