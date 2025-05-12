@@ -1,8 +1,7 @@
 import re
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Dict, List, Literal, Optional
-from .search_types import ResultsCondition
+from typing import Dict, List, Literal, Optional, Union
 from dataclasses_json import DataClassJsonMixin, dataclass_json
 
 
@@ -10,7 +9,7 @@ from dataclasses_json import DataClassJsonMixin, dataclass_json
 @dataclass
 class StoredAudioData(DataClassJsonMixin):
     id: str
-    data: Dict[str, str]
+    data: Dict[str, Union[str, int, float]]
 
 
 @dataclass_json
@@ -52,22 +51,6 @@ class Column(DataClassJsonMixin):
 @dataclass
 class Script(DataClassJsonMixin):
     columns: List[Column]
-
-    def create_results_condition(self,
-                                 model_id: str,
-                                 column: str, subcolumn: str,
-                                 score_equal: Optional[int] = None,
-                                 score_greater_than: Optional[int] = None,
-                                 score_less_than: Optional[int] = None) -> ResultsCondition:
-
-        column_idx = [column.name for column in self.columns].index(column)
-        subcolumn_idx = self.columns[column_idx].subcolumns.index(subcolumn)
-        return ResultsCondition(model_id=model_id,
-                                column_idx=column_idx,
-                                subcolumn_idx=subcolumn_idx,
-                                score_equal=score_equal,
-                                score_greater_than=score_greater_than,
-                                score_less_than=score_less_than)
 
 
 @dataclass_json

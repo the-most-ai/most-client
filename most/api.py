@@ -24,8 +24,8 @@ from most.types import (
 
 class MostClient(object):
     retort = Retort(recipe=[
-        loader(int, lambda x: int(x)),
-        loader(float, lambda x: float(x)),
+        loader(int, lambda x: x if isinstance(x, int) else int(x)),
+        loader(float, lambda x: x if isinstance(x, float) else float(x)),
         loader(datetime, lambda x: datetime.fromtimestamp(x).astimezone(tz=timezone.utc) if isinstance(x, (int, float)) else datetime.fromisoformat(x)),
     ],)
 
@@ -264,7 +264,7 @@ class MostClient(object):
                          params={"overwrite": overwrite})
         result = self.retort.load(resp.json(), Result)
         if modify_scores:
-            result = self.score_modifier.modify(result)
+            result = self.get_score_modifier().modify(result)
         return result
 
     def apply_on_text(self, text_id,
@@ -280,7 +280,7 @@ class MostClient(object):
                          params={"overwrite": overwrite})
         result = self.retort.load(resp.json(), Result)
         if modify_scores:
-            result = self.score_modifier.modify(result)
+            result = self.get_score_modifier().modify(result)
         return result
 
     def transcribe_later(self, audio_id,
@@ -308,7 +308,7 @@ class MostClient(object):
                          params={"overwrite": overwrite})
         result = self.retort.load(resp.json(), Result)
         if modify_scores:
-            result = self.score_modifier.modify(result)
+            result = self.get_score_modifier().modify(result)
         return result
 
     def apply_on_text_later(self, text_id,
@@ -324,7 +324,7 @@ class MostClient(object):
                          params={"overwrite": overwrite})
         result = self.retort.load(resp.json(), Result)
         if modify_scores:
-            result = self.score_modifier.modify(result)
+            result = self.get_score_modifier().modify(result)
         return result
 
     def get_job_status(self, audio_id) -> JobStatus:
@@ -348,7 +348,7 @@ class MostClient(object):
         resp = self.get(f"/{self.client_id}/audio/{audio_id}/model/{self.model_id}/results")
         result = self.retort.load(resp.json(), Result)
         if modify_scores:
-            result = self.score_modifier.modify(result)
+            result = self.get_score_modifier().modify(result)
         return result
 
     def fetch_text(self, audio_id: str) -> Result:
@@ -401,7 +401,7 @@ class MostClient(object):
 
     def store_info(self,
                    audio_id: str,
-                   data: Dict[str, str]) -> StoredAudioData:
+                   data: Dict[str, Union[str, int, float]]) -> StoredAudioData:
         if not is_valid_id(audio_id):
             raise RuntimeError("Please use valid audio_id. [try audio.id from list_audios()]")
 
@@ -409,14 +409,14 @@ class MostClient(object):
                          json={
                              "data": data,
                          })
-        return self.retort.load(resp.json(), StoredAudioData)
+        return StoredAudioData.from_dict(resp.json())
 
     def fetch_info(self, audio_id: str) -> StoredAudioData:
         if not is_valid_id(audio_id):
             raise RuntimeError("Please use valid audio_id. [try audio.id from list_audios()]")
 
         resp = self.get(f"/{self.client_id}/audio/{audio_id}/info")
-        return self.retort.load(resp.json(), StoredAudioData)
+        return StoredAudioData.from_dict(resp.json())
 
     def __call__(self, audio_path: Path,
                  modify_scores: bool = False) -> Result:

@@ -24,8 +24,8 @@ from most.types import (
 
 class AsyncMostClient(object):
     retort = Retort(recipe=[
-        loader(int, lambda x: int(x)),
-        loader(float, lambda x: float(x)),
+        loader(int, lambda x: x if isinstance(x, int) else int(x)),
+        loader(float, lambda x: x if isinstance(x, float) else float(x)),
         loader(datetime, lambda x: datetime.fromtimestamp(x).astimezone(tz=timezone.utc) if isinstance(x, (int, float)) else datetime.fromisoformat(x)),
     ])
 
@@ -274,7 +274,8 @@ class AsyncMostClient(object):
                                params={"overwrite": overwrite})
         result = self.retort.load(resp.json(), Result)
         if modify_scores:
-            result = self.score_modifier.modify(result)
+            score_modifier = await self.get_score_modifier()
+            result = score_modifier.modify(result)
         return result
 
     async def apply_on_text(self, text_id,
@@ -290,7 +291,8 @@ class AsyncMostClient(object):
                                params={"overwrite": overwrite})
         result = self.retort.load(resp.json(), Result)
         if modify_scores:
-            result = self.score_modifier.modify(result)
+            score_modifier = await self.get_score_modifier()
+            result = score_modifier.modify(result)
         return result
 
     async def transcribe_later(self, audio_id,
@@ -318,7 +320,8 @@ class AsyncMostClient(object):
                                params={"overwrite": overwrite})
         result = self.retort.load(resp.json(), Result)
         if modify_scores:
-            result = self.score_modifier.modify(result)
+            score_modifier = await self.get_score_modifier()
+            result = score_modifier.modify(result)
         return result
 
     async def apply_on_text_later(self, text_id,
@@ -334,7 +337,8 @@ class AsyncMostClient(object):
                                params={"overwrite": overwrite})
         result = self.retort.load(resp.json(), Result)
         if modify_scores:
-            result = self.score_modifier.modify(result)
+            score_modifier = await self.get_score_modifier()
+            result = score_modifier.modify(result)
         return result
 
     async def get_job_status(self, audio_id) -> JobStatus:
@@ -358,7 +362,8 @@ class AsyncMostClient(object):
         resp = await self.get(f"/{self.client_id}/audio/{audio_id}/model/{self.model_id}/results")
         result = self.retort.load(resp.json(), Result)
         if modify_scores:
-            result = self.score_modifier.modify(result)
+            score_modifier = await self.get_score_modifier()
+            result = score_modifier.modify(result)
         return result
 
     async def fetch_text(self, audio_id) -> Result:
@@ -411,18 +416,18 @@ class AsyncMostClient(object):
 
     async def store_info(self,
                          audio_id: str,
-                         data: Dict[str, str]) -> StoredAudioData:
+                         data: Dict[str, Union[str, int, float]]) -> StoredAudioData:
         resp = await self.post(f"/{self.client_id}/audio/{audio_id}/info",
                                json={
                                    "data": data,
                                })
-        return self.retort.load(resp.json(), StoredAudioData)
+        return StoredAudioData.from_dict(resp.json())
 
     async def fetch_info(self, audio_id: str) -> StoredAudioData:
         if not is_valid_id(audio_id):
             raise RuntimeError("Please use valid audio_id. [try audio.id from list_audios()]")
         resp = await self.get(f"/{self.client_id}/audio/{audio_id}/info")
-        return self.retort.load(resp.json(), StoredAudioData)
+        return StoredAudioData.from_dict(resp.json())
 
     async def __call__(self, audio_path: Path,
                        modify_scores: bool = False) -> Result:

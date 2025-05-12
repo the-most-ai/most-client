@@ -82,6 +82,7 @@ target/
 # Jupyter Notebook
 .ipynb_checkpoints
 notebooks/no-commit-tests.ipynb
+notebooks/no-commit-tests-*.ipynb
 
 # IPython
 profile_default/
