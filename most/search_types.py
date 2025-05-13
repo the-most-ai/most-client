@@ -1,17 +1,15 @@
 from dataclasses import dataclass, field
 from typing import List, Optional
-
-from bson import ObjectId
 from dataclasses_json import DataClassJsonMixin, dataclass_json
 
 
 @dataclass_json
 @dataclass
 class IDCondition(DataClassJsonMixin):
-    equal: Optional[ObjectId] = None
-    in_set: Optional[List[ObjectId]] = None
-    greater_than: Optional[ObjectId] = None
-    less_than: Optional[ObjectId] = None
+    equal: Optional[str] = None
+    in_set: Optional[List[str]] = None
+    greater_than: Optional[str] = None
+    less_than: Optional[str] = None
 
 
 @dataclass_json

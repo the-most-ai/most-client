@@ -13,4 +13,3 @@ tox
 twine
 httpx
 pydub
-bson
