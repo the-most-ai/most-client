@@ -112,8 +112,6 @@ class AsyncMostClient(object):
 
     def with_model(self, model_id):
         client = self.clone()
-        if not is_valid_id(self.model_id):
-            raise RuntimeError("Please choose valid model to apply. [try list_models()]")
         client.model_id = model_id
         client.score_modifier = None
         return client
