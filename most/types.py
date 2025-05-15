@@ -114,6 +114,27 @@ class Dialog(DataClassJsonMixin):
         return ''.join([segment.to_text()
                         for segment in self.segments])
 
+    def to_raw_text(self):
+        return ' '.join([segment.text
+                         for segment in self.segments])
+
+    def to_raw_speaker_text(self, speaker):
+        return ' '.join([segment.text
+                         for segment in self.segments
+                         if segment.speaker == speaker])
+
+    def get_speaker_names(self):
+        return list(set([segment.speaker
+                         for segment in self.segments]))
+
+
+@dataclass_json
+@dataclass
+class GlossaryNGram(DataClassJsonMixin):
+    pronunciation: List[str]
+    original: List[str]
+    id: Optional[str] = None
+
 
 @dataclass_json
 @dataclass

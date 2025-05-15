@@ -1,5 +1,5 @@
 from dataclasses import dataclass, field
-from typing import List, Optional
+from typing import List, Optional, Literal
 from dataclasses_json import DataClassJsonMixin, dataclass_json
 
 
@@ -10,12 +10,14 @@ class IDCondition(DataClassJsonMixin):
     in_set: Optional[List[str]] = None
     greater_than: Optional[str] = None
     less_than: Optional[str] = None
+    type: Literal["IDCondition"] = "IDCondition"
 
 
 @dataclass_json
 @dataclass
 class ChannelsCondition(DataClassJsonMixin):
     equal: Optional[int] = None
+    type: Literal["ChannelsCondition"] = "ChannelsCondition"
 
 
 @dataclass_json
@@ -23,12 +25,14 @@ class ChannelsCondition(DataClassJsonMixin):
 class DurationCondition(DataClassJsonMixin):
     greater_than: Optional[int] = None
     less_than: Optional[int] = None
+    type: Literal["DurationCondition"] = "DurationCondition"
 
 
 @dataclass_json
 @dataclass
 class TagsCondition(DataClassJsonMixin):
     in_set: Optional[List[str]] = None
+    type: Literal["TagsCondition"] = "TagsCondition"
 
 
 @dataclass_json
@@ -40,6 +44,7 @@ class StoredInfoCondition(DataClassJsonMixin):
     ends_with: Optional[str] = None
     greater_than: Optional[int | str | float] = None
     less_than: Optional[int | str | float] = None
+    type: Literal["StoredInfoCondition"] = "StoredInfoCondition"
 
 
 @dataclass_json
@@ -52,6 +57,7 @@ class ResultsCondition(DataClassJsonMixin):
     score_in_set: Optional[List[int]] = None
     score_greater_than: Optional[int] = None
     score_less_than: Optional[int] = None
+    type: Literal["ResultsCondition"] = "ResultsCondition"
 
     def create_from(self, client,
                     column: str, subcolumn: str,

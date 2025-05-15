@@ -3,7 +3,7 @@ import os
 import uuid
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Dict, List, Optional, Union
+from typing import Dict, List, Optional, Union, Literal
 import json5
 import httpx
 from adaptix import Retort, loader
@@ -361,14 +361,20 @@ class MostClient(object):
         resp = self.get(f"/{self.client_id}/audio/{audio_id}/model/{self.model_id}/text")
         return self.retort.load(resp.json(), Result)
 
-    def fetch_dialog(self, audio_id) -> DialogResult:
+    def fetch_dialog(self, audio_id,
+                     transcribator_name: Optional[Literal["GroundTruth"]] = None) -> DialogResult:
         if not is_valid_id(self.model_id):
             raise RuntimeError("Please choose valid model to apply. [try list_models()]")
 
         if not is_valid_id(audio_id):
             raise RuntimeError("Please use valid audio_id. [try audio.id from list_audios()]")
 
-        resp = self.get(f"/{self.client_id}/audio/{audio_id}/model/{self.model_id}/dialog")
+        params = {}
+        if transcribator_name is not None:
+            params["transcribator_name"] = transcribator_name
+
+        resp = self.get(f"/{self.client_id}/audio/{audio_id}/model/{self.model_id}/dialog",
+                        params=params)
         return self.retort.load(resp.json(), DialogResult)
 
     def update_dialog(self, audio_id, dialog: Dialog) -> DialogResult:
