@@ -27,6 +27,12 @@ class DurationCondition(DataClassJsonMixin):
 
 @dataclass_json
 @dataclass
+class TagsCondition(DataClassJsonMixin):
+    in_set: Optional[List[str]] = None
+
+
+@dataclass_json
+@dataclass
 class StoredInfoCondition(DataClassJsonMixin):
     key: str
     match: Optional[int | str | float] = None
@@ -135,7 +141,7 @@ class ResultsCondition(DataClassJsonMixin):
 @dataclass_json
 @dataclass
 class SearchParams(DataClassJsonMixin):
-    must: List[StoredInfoCondition | ResultsCondition | DurationCondition | ChannelsCondition | IDCondition ] = field(default_factory=list)
-    should: List[StoredInfoCondition | ResultsCondition | DurationCondition | ChannelsCondition | IDCondition ] = field(default_factory=list)
-    must_not: List[StoredInfoCondition | ResultsCondition | DurationCondition | ChannelsCondition | IDCondition ] = field(default_factory=list)
-    should_not: List[StoredInfoCondition | ResultsCondition | DurationCondition | ChannelsCondition | IDCondition ] = field(default_factory=list)
+    must: List[StoredInfoCondition | ResultsCondition | DurationCondition | ChannelsCondition | IDCondition | TagsCondition] = field(default_factory=list)
+    should: List[StoredInfoCondition | ResultsCondition | DurationCondition | ChannelsCondition | IDCondition | TagsCondition ] = field(default_factory=list)
+    must_not: List[StoredInfoCondition | ResultsCondition | DurationCondition | ChannelsCondition | IDCondition | TagsCondition ] = field(default_factory=list)
+    should_not: List[StoredInfoCondition | ResultsCondition | DurationCondition | ChannelsCondition | IDCondition | TagsCondition ] = field(default_factory=list)
