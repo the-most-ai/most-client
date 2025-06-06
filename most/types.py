@@ -131,8 +131,18 @@ class Dialog(DataClassJsonMixin):
 @dataclass_json
 @dataclass
 class GlossaryNGram(DataClassJsonMixin):
-    pronunciation: List[str]
     original: List[str]
+    pronunciation: List[str]
+    weight: float = 2
+    id: Optional[str] = None
+
+
+@dataclass_json
+@dataclass
+class Item(DataClassJsonMixin):
+    title: str
+    pronunciation: str
+    metadata: Dict[str, str]
     id: Optional[str] = None
 
 
