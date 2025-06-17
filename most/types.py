@@ -203,6 +203,13 @@ def is_valid_objectid(oid: str) -> bool:
     return bool(re.fullmatch(r"^[0-9a-fA-F]{24}$", oid))
 
 
+def is_valid_english_word(text: str) -> bool:
+    """
+    Returns True if the text starts with a letter and contains only English letters and digits.
+    """
+    return bool(re.fullmatch(r"[A-Za-z][A-Za-z0-9]*", text))
+
+
 def is_valid_id(smth_id: Optional[str]) -> bool:
     if smth_id is None:
         return False
@@ -210,4 +217,4 @@ def is_valid_id(smth_id: Optional[str]) -> bool:
     if smth_id.startswith("most-"):
         smth_id = smth_id[5:]
 
-    return is_valid_objectid(smth_id)
+    return is_valid_objectid(smth_id) or is_valid_english_word(smth_id)
