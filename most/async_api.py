@@ -462,6 +462,14 @@ class AsyncMostClient(object):
             raise RuntimeError("Audio can't be indexed")
         return None
 
+    async def search_by_indexed_audio(self, query: str, limit: int) -> List:
+        resp = await self.get(f"/{self.client_id}/model/{self.model_id}/search_elastic",
+                              params={"query": query,
+                                      "limit": limit})
+        if resp.status_code >= 400:
+            raise RuntimeError("Audio can't be indexed")
+        return resp.json()
+
     async def get_usage(self,
                         start_dt: datetime,
                         end_dt: datetime):
