@@ -470,3 +470,20 @@ class MostClient(object):
                                 'end_dt': end_dt.astimezone(timezone.utc).isoformat()})
         resp.raise_for_status()
         return self.retort.load(resp.json(), Usage)
+
+    def ask(self, question,
+            audio_ids: List[str],
+            text_ids: List[str]) -> str:
+        if not all(is_valid_id(text_id) for text_id in text_ids):
+            raise RuntimeError("Please use valid text_id. [try text.id from list_texts()]")
+
+        if not all(is_valid_id(audio_id) for audio_id in audio_ids):
+            raise RuntimeError("Please use valid text_id. [try text.id from list_texts()]")
+
+        resp = self.post(f"/{self.client_id}/model/{self.model_id}/ask",
+                         json={
+                             "question": question,
+                             "text_ids": text_ids,
+                             "audio_ids": audio_ids,
+                         })
+        return resp.json()
