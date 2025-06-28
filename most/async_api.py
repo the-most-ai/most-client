@@ -339,53 +339,57 @@ class AsyncMostClient(object):
             result = score_modifier.modify(result)
         return result
 
-    async def get_job_status(self, audio_id) -> JobStatus:
+    async def get_job_status(self, data_id: str,
+                             data_source: Literal["text", "audio"] = "audio") -> JobStatus:
         if not is_valid_id(self.model_id):
             raise RuntimeError("Please choose valid model to apply. [try list_models()]")
 
-        if not is_valid_id(audio_id):
-            raise RuntimeError("Please use valid audio_id. [try audio.id from list_audios()]")
+        if not is_valid_id(data_id):
+            raise RuntimeError("Please use valid data_id. [try audio.id / text.id from list_audios() / list_texts()]")
 
-        resp = await self.post(f"/{self.client_id}/audio/{audio_id}/model/{self.model_id}/apply_status")
+        resp = await self.post(f"/{self.client_id}/{data_source}/{data_id}/model/{self.model_id}/apply_status")
         return self.retort.load(resp.json(), JobStatus)
 
-    async def fetch_results(self, audio_id,
-                            modify_scores: bool = False) -> Result:
+    async def fetch_results(self, data_id: str,
+                            modify_scores: bool = False,
+                            data_source: Literal["text", "audio"] = "audio") -> Result:
         if not is_valid_id(self.model_id):
             raise RuntimeError("Please choose valid model to apply. [try list_models()]")
 
-        if not is_valid_id(audio_id):
-            raise RuntimeError("Please use valid audio_id. [try audio.id from list_audios()]")
+        if not is_valid_id(data_id):
+            raise RuntimeError("Please use valid data_id. [try audio.id / text.id from list_audios() / list_texts()]")
 
-        resp = await self.get(f"/{self.client_id}/audio/{audio_id}/model/{self.model_id}/results")
+        resp = await self.get(f"/{self.client_id}/{data_source}/{data_id}/model/{self.model_id}/results")
         result = self.retort.load(resp.json(), Result)
         if modify_scores:
             score_modifier = await self.get_score_modifier()
             result = score_modifier.modify(result)
         return result
 
-    async def fetch_text(self, audio_id) -> Result:
+    async def fetch_text(self, data_id: str,
+                         data_source: Literal["text", "audio"] = "audio") -> Result:
         if not is_valid_id(self.model_id):
             raise RuntimeError("Please choose valid model to apply. [try list_models()]")
 
-        if not is_valid_id(audio_id):
-            raise RuntimeError("Please use valid audio_id. [try audio.id from list_audios()]")
+        if not is_valid_id(data_id):
+            raise RuntimeError("Please use valid data_id. [try audio.id / text.id from list_audios() / list_texts()]")
 
-        resp = await self.get(f"/{self.client_id}/audio/{audio_id}/model/{self.model_id}/text")
+        resp = await self.get(f"/{self.client_id}/{data_source}/{data_id}/model/{self.model_id}/text")
         return self.retort.load(resp.json(), Result)
 
-    async def fetch_dialog(self, audio_id,
-                           transcribator_name: Optional[Literal["GroundTruth"]] = None) -> DialogResult:
+    async def fetch_dialog(self, data_id,
+                           transcribator_name: Optional[Literal["GroundTruth"]] = None,
+                           data_source: Literal["text", "audio"] = "audio") -> DialogResult:
         if not is_valid_id(self.model_id):
             raise RuntimeError("Please choose valid model to apply. [try list_models()]")
 
-        if not is_valid_id(audio_id):
-            raise RuntimeError("Please use valid audio_id. [try audio.id from list_audios()]")
+        if not is_valid_id(data_id):
+            raise RuntimeError("Please use valid data_id. [try audio.id / text.id from list_audios() / list_texts()]")
 
         params = {}
         if transcribator_name is not None:
             params["transcribator_name"] = transcribator_name
-        resp = await self.get(f"/{self.client_id}/audio/{audio_id}/model/{self.model_id}/dialog",
+        resp = await self.get(f"/{self.client_id}/{data_source}/{data_id}/model/{self.model_id}/dialog",
                               params=params)
         return self.retort.load(resp.json(), DialogResult)
 
