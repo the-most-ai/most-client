@@ -26,3 +26,13 @@ class AsyncCatalog(object):
         await self.client.post(f"/{self.client.client_id}/delete_items",
                                json=item_ids)
         return self
+
+    async def search_items(self,
+                           query: str,
+                           limit: int = 10) -> List[Item]:
+        resp = await self.client.get(f"/{self.client.client_id}/search_items",
+                                     params={
+                                         "query": query,
+                                         "limit": limit,
+                                     })
+        return self.client.retort.load(resp.json(), List[Item])
