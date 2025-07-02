@@ -207,7 +207,7 @@ def is_valid_english_word(text: str) -> bool:
     """
     Returns True if the text starts with a letter and contains only English letters and digits.
     """
-    return bool(re.fullmatch(r"[A-Za-z][A-Za-z0-9]*", text))
+    return bool(re.fullmatch(r"[A-Za-z][A-Za-z0-9\-]*", text))
 
 
 def is_valid_id(smth_id: Optional[str]) -> bool:
