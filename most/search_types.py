@@ -2,6 +2,8 @@ from dataclasses import dataclass, field
 from typing import List, Optional, Literal
 from dataclasses_json import DataClassJsonMixin, dataclass_json
 
+from most.types import ModelInfo
+
 
 @dataclass_json
 @dataclass
@@ -69,6 +71,7 @@ class ResultsCondition(DataClassJsonMixin):
         from .api import MostClient
         client: MostClient
         script = client.get_model_script()
+        model_info: ModelInfo = client.get_model_info()
         column_idx = [column.name for column in script.columns].index(column)
         subcolumn_idx = script.columns[column_idx].subcolumns.index(subcolumn)
 
@@ -111,6 +114,7 @@ class ResultsCondition(DataClassJsonMixin):
         from .async_api import AsyncMostClient
         client: AsyncMostClient
         script = await client.get_model_script()
+        model_info: ModelInfo = await client.get_model_info()
         column_idx = [column.name for column in script.columns].index(column)
         subcolumn_idx = script.columns[column_idx].subcolumns.index(subcolumn)
 

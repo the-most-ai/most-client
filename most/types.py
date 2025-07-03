@@ -55,6 +55,14 @@ class Script(DataClassJsonMixin):
 
 @dataclass_json
 @dataclass
+class ModelInfo(DataClassJsonMixin):
+    model_id: str
+    secondary_model_ids: List[str]
+    script: Script
+
+
+@dataclass_json
+@dataclass
 class ScriptScoreMapping(DataClassJsonMixin):
     column: str
     subcolumn: str

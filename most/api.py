@@ -18,7 +18,7 @@ from most.types import (
     Script,
     StoredAudioData,
     Text,
-    is_valid_id, ScriptScoreMapping, Dialog, Usage,
+    is_valid_id, ScriptScoreMapping, Dialog, Usage, ModelInfo,
 )
 
 
@@ -228,6 +228,13 @@ class MostClient(object):
         resp = self.get(f"/{self.client_id}/list_texts?offset={offset}&limit={limit}")
         texts_list = resp.json()
         return self.retort.load(texts_list, List[Text])
+
+    def get_model_info(self):
+        if not is_valid_id(self.model_id):
+            raise RuntimeError("Please choose valid model to apply. [try list_models()]")
+
+        resp = self.get(f"/{self.client_id}/model/{self.model_id}/info")
+        return self.retort.load(resp.json(), ModelInfo)
 
     def get_model_script(self) -> Script:
         if not is_valid_id(self.model_id):

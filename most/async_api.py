@@ -18,7 +18,7 @@ from most.types import (
     Script,
     StoredAudioData,
     Text,
-    is_valid_id, ScriptScoreMapping, Dialog, Usage,
+    is_valid_id, ScriptScoreMapping, Dialog, Usage, ModelInfo,
 )
 
 
@@ -258,6 +258,13 @@ class AsyncMostClient(object):
         resp = await self.get("/list_models")
         return [self.with_model(model['model'])
                 for model in resp.json()]
+
+    async def get_model_info(self):
+        if not is_valid_id(self.model_id):
+            raise RuntimeError("Please choose valid model to apply. [try list_models()]")
+
+        resp = await self.get(f"/{self.client_id}/model/{self.model_id}/info")
+        return self.retort.load(resp.json(), ModelInfo)
 
     async def apply(self, audio_id,
                     modify_scores: bool = False,
