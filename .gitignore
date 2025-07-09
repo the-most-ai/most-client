@@ -83,6 +83,7 @@ target/
 .ipynb_checkpoints
 notebooks/no-commit-tests.ipynb
 notebooks/no-commit-tests-*.ipynb
+notebooks/no-commit*.ipynb
 
 # IPython
 profile_default/
