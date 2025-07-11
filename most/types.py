@@ -1,5 +1,5 @@
 import re
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import datetime
 from typing import Dict, List, Literal, Optional, Union
 from dataclasses_json import DataClassJsonMixin, dataclass_json
@@ -45,6 +45,12 @@ class ColumnResult(DataClassJsonMixin):
 class Column(DataClassJsonMixin):
     name: str
     subcolumns: List[str]
+    tags: List[str] = field(default_factory=list)
+    subtags: List[List[str]] = field(default_factory=list)
+
+    def __post_init__(self):
+        if not self.subtags:
+            self.subtags = [[] for _ in self.subcolumns]
 
 
 @dataclass_json
