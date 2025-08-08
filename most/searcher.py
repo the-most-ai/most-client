@@ -53,5 +53,5 @@ class MostSearcher(object):
                                 })
         if resp.status_code >= 400:
             raise RuntimeError("Audio can't be indexed")
-        audio_list = resp.json()
-        return self.client.retort.load(audio_list, List[StoredAudioData | StoredTextData])
+        data_list = resp.json()
+        return self.client.retort.load(data_list, List[StoredAudioData | StoredTextData])

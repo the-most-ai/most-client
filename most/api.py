@@ -18,7 +18,7 @@ from most.types import (
     Script,
     StoredAudioData,
     Text,
-    is_valid_id, ScriptScoreMapping, Dialog, Usage, ModelInfo, StoredTextData,
+    is_valid_id, ScriptScoreMapping, Dialog, Usage, ModelInfo, StoredTextData
 )
 
 
@@ -26,6 +26,7 @@ class MostClient(object):
     retort = Retort(recipe=[
         loader(int, lambda x: x if isinstance(x, int) else int(x)),
         loader(float, lambda x: x if isinstance(x, float) else float(x)),
+        loader(Union[str, int, float], lambda x: int(x) if isinstance(x, int) else float(x) if isinstance(x, float) else str(x)),
         loader(datetime, lambda x: datetime.fromtimestamp(x).astimezone(tz=timezone.utc) if isinstance(x, (int, float)) else datetime.fromisoformat(x)),
     ],)
 
@@ -426,7 +427,7 @@ class MostClient(object):
                          json={
                              "data": data,
                          })
-        return StoredAudioData.from_dict(resp.json())
+        return self.retort.load(resp.json(), StoredAudioData)
 
     def store_text_info(self,
                         text_id: str,
@@ -438,14 +439,14 @@ class MostClient(object):
                          json={
                              "data": data,
                          })
-        return StoredTextData.from_dict(resp.json())
+        return self.retort.load(resp.json(), StoredTextData)
 
     def fetch_info(self, audio_id: str) -> StoredAudioData:
         if not is_valid_id(audio_id):
             raise RuntimeError("Please use valid audio_id. [try audio.id from list_audios()]")
 
         resp = self.get(f"/{self.client_id}/audio/{audio_id}/info")
-        return StoredAudioData.from_dict(resp.json())
+        return self.retort.load(resp.json(), StoredAudioData)
 
 
     def fetch_text_info(self, text_id: str) -> StoredTextData:
@@ -453,7 +454,7 @@ class MostClient(object):
             raise RuntimeError("Please use valid text_id. [try text.id from list_texts()]")
 
         resp = self.get(f"/{self.client_id}/text/{text_id}/info")
-        return StoredTextData.from_dict(resp.json())
+        return self.retort.load(resp.json(), StoredTextData)
 
     def __call__(self, audio_path: Path,
                  modify_scores: bool = False) -> Result:

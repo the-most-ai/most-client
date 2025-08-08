@@ -17,6 +17,7 @@ from most.types import (
     Result,
     Script,
     StoredAudioData,
+    StoredTextData,
     Text,
     is_valid_id, ScriptScoreMapping, Dialog, Usage, ModelInfo,
 )
@@ -24,9 +25,14 @@ from most.types import (
 
 class AsyncMostClient(object):
     retort = Retort(recipe=[
-        loader(int, lambda x: x if isinstance(x, int) else int(x)),
-        loader(float, lambda x: x if isinstance(x, float) else float(x)),
-        loader(datetime, lambda x: datetime.fromtimestamp(x).astimezone(tz=timezone.utc) if isinstance(x, (int, float)) else datetime.fromisoformat(x)),
+        loader(int,
+               lambda x: x if isinstance(x, int) else int(x)),
+        loader(float,
+               lambda x: x if isinstance(x, float) else float(x)),
+        loader(Union[str, int, float],
+               lambda x: int(x) if isinstance(x, int) else float(x) if isinstance(x, float) else str(x)),
+        loader(datetime,
+               lambda x: datetime.fromtimestamp(x).astimezone(tz=timezone.utc) if isinstance(x, (int, float)) else datetime.fromisoformat(x)),
     ])
 
     def __init__(self,
@@ -431,17 +437,37 @@ class AsyncMostClient(object):
     async def store_info(self,
                          audio_id: str,
                          data: Dict[str, Union[str, int, float]]) -> StoredAudioData:
+        if not is_valid_id(audio_id):
+            raise RuntimeError("Please use valid audio_id. [try audio.id from list_audios()]")
         resp = await self.post(f"/{self.client_id}/audio/{audio_id}/info",
                                json={
                                    "data": data,
                                })
-        return StoredAudioData.from_dict(resp.json())
+        return self.retort.load(resp.json(), StoredAudioData)
 
     async def fetch_info(self, audio_id: str) -> StoredAudioData:
         if not is_valid_id(audio_id):
             raise RuntimeError("Please use valid audio_id. [try audio.id from list_audios()]")
         resp = await self.get(f"/{self.client_id}/audio/{audio_id}/info")
-        return StoredAudioData.from_dict(resp.json())
+        return self.retort.load(resp.json(), StoredAudioData)
+
+    async def store_text_info(self,
+                              text_id: str,
+                              data: Dict[str, Union[str, int, float]]) -> StoredTextData:
+        if not is_valid_id(text_id):
+            raise RuntimeError("Please use valid text_id. [try text.id from list_texts()]")
+
+        resp = await self.post(f"/{self.client_id}/text/{text_id}/info",
+                               json={
+                                   "data": data,
+                               })
+        return self.retort.load(resp.json(), StoredTextData)
+
+    async def fetch_text_info(self, text_id: str) -> StoredTextData:
+        if not is_valid_id(text_id):
+            raise RuntimeError("Please use valid text_id. [try text.id from list_texts()]")
+        resp = await self.get(f"/{self.client_id}/text/{text_id}/info")
+        return self.retort.load(resp.json(), StoredTextData)
 
     async def __call__(self, audio_path: Path,
                        modify_scores: bool = False) -> Result:

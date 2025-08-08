@@ -1,6 +1,6 @@
 from typing import List, Literal, Optional
 from . import AsyncMostClient
-from .types import Audio
+from .types import Audio, StoredAudioData, StoredTextData
 from .search_types import SearchParams
 
 
@@ -53,5 +53,5 @@ class AsyncMostSearcher(object):
                                      })
         if resp.status_code >= 400:
             raise RuntimeError("Audio can't be indexed")
-        audio_list = resp.json()
-        return self.client.retort.load(audio_list, List[Audio])
+        data_list = resp.json()
+        return self.client.retort.load(data_list, List[StoredAudioData | StoredTextData])
