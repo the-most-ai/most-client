@@ -9,6 +9,7 @@ from dataclasses_json import DataClassJsonMixin, dataclass_json
 @dataclass
 class StoredAudioData(DataClassJsonMixin):
     id: str
+    url: str
     data: Dict[str, Union[str, int, float]]
 
 
@@ -23,6 +24,13 @@ class Audio(DataClassJsonMixin):
 @dataclass
 class Text(DataClassJsonMixin):
     id: str
+
+
+@dataclass_json
+@dataclass
+class StoredTextData(DataClassJsonMixin):
+    id: str
+    data: Dict[str, Union[str, int, float]]
 
 
 @dataclass_json

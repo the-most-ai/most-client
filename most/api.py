@@ -18,7 +18,7 @@ from most.types import (
     Script,
     StoredAudioData,
     Text,
-    is_valid_id, ScriptScoreMapping, Dialog, Usage, ModelInfo,
+    is_valid_id, ScriptScoreMapping, Dialog, Usage, ModelInfo, StoredTextData,
 )
 
 
@@ -428,12 +428,32 @@ class MostClient(object):
                          })
         return StoredAudioData.from_dict(resp.json())
 
+    def store_text_info(self,
+                        text_id: str,
+                        data: Dict[str, Union[str, int, float]]) -> StoredTextData:
+        if not is_valid_id(text_id):
+            raise RuntimeError("Please use valid text_id. [try text.id from list_texts()]")
+
+        resp = self.post(f"/{self.client_id}/text/{text_id}/info",
+                         json={
+                             "data": data,
+                         })
+        return StoredTextData.from_dict(resp.json())
+
     def fetch_info(self, audio_id: str) -> StoredAudioData:
         if not is_valid_id(audio_id):
             raise RuntimeError("Please use valid audio_id. [try audio.id from list_audios()]")
 
         resp = self.get(f"/{self.client_id}/audio/{audio_id}/info")
         return StoredAudioData.from_dict(resp.json())
+
+
+    def fetch_text_info(self, text_id: str) -> StoredTextData:
+        if not is_valid_id(text_id):
+            raise RuntimeError("Please use valid text_id. [try text.id from list_texts()]")
+
+        resp = self.get(f"/{self.client_id}/text/{text_id}/info")
+        return StoredTextData.from_dict(resp.json())
 
     def __call__(self, audio_path: Path,
                  modify_scores: bool = False) -> Result:

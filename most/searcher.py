@@ -2,7 +2,7 @@ from typing import List, Literal, Optional
 
 from .api import MostClient
 from .search_types import SearchParams
-from .types import Audio, Text
+from .types import Audio, Text, StoredAudioData, StoredTextData
 
 
 class MostSearcher(object):
@@ -54,4 +54,4 @@ class MostSearcher(object):
         if resp.status_code >= 400:
             raise RuntimeError("Audio can't be indexed")
         audio_list = resp.json()
-        return self.client.retort.load(audio_list, List[Audio])
+        return self.client.retort.load(audio_list, List[StoredAudioData | StoredTextData])
