@@ -182,7 +182,7 @@ class MostClient(object):
 
     def upload_text(self, text: str) -> Text:
         resp = self.post(f"/{self.client_id}/upload_text",
-                         files={"text": text})
+                         json={"text": text})
         return self.retort.load(resp.json(), Text)
 
     def upload_dialog(self, dialog: Dialog) -> DialogResult:
