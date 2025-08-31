@@ -11,6 +11,7 @@ class StoredAudioData(DataClassJsonMixin):
     id: str
     url: str
     data: Dict[str, Union[str, int, float]]
+    results: Dict[str, dict]
 
 
 @dataclass_json
@@ -31,6 +32,7 @@ class Text(DataClassJsonMixin):
 class StoredTextData(DataClassJsonMixin):
     id: str
     data: Dict[str, Union[str, int, float]]
+    results: Dict[str, dict]
 
 
 @dataclass_json

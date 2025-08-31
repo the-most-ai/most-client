@@ -8,7 +8,7 @@ with open('requirements.txt', 'r') as f:
 
 setup(
     name='most-client',
-    version='1.0.55',
+    version='1.0.56',
     python_requires=f'>=3.6',
     description='Most AI API for https://the-most.ai',
     url='https://github.com/the-most-ai/most-client',
