@@ -10,8 +10,8 @@ from dataclasses_json import DataClassJsonMixin, dataclass_json
 class StoredAudioData(DataClassJsonMixin):
     id: str
     url: str
-    data: Dict[str, Union[str, int, float]]
-    results: Dict[str, dict]
+    data: Optional[Dict[str, Union[str, int, float]]] = None
+    results: Optional[Dict[str, dict]] = None
 
 
 @dataclass_json
@@ -31,8 +31,8 @@ class Text(DataClassJsonMixin):
 @dataclass
 class StoredTextData(DataClassJsonMixin):
     id: str
-    data: Dict[str, Union[str, int, float]]
-    results: Dict[str, dict]
+    data: Optional[Dict[str, Union[str, int, float]]] = None
+    results: Optional[Dict[str, dict]] = None
 
 
 @dataclass_json
