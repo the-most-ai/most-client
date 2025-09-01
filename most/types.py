@@ -11,7 +11,7 @@ class StoredAudioData(DataClassJsonMixin):
     id: str
     url: str
     data: Optional[Dict[str, Union[str, int, float]]] = None
-    results: Optional[Dict[str, dict]] = None
+    results: Optional[Dict[str, List["ColumnResult"]]] = None
 
 
 @dataclass_json
@@ -32,7 +32,7 @@ class Text(DataClassJsonMixin):
 class StoredTextData(DataClassJsonMixin):
     id: str
     data: Optional[Dict[str, Union[str, int, float]]] = None
-    results: Optional[Dict[str, dict]] = None
+    results: Optional[Dict[str, List["ColumnResult"]]] = None
 
 
 @dataclass_json
