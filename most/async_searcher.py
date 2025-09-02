@@ -45,7 +45,8 @@ class AsyncMostSearcher(object):
                      filter: Optional[SearchParams] = None,
                      limit: int = 10,
                      include_data: bool = False,
-                     include_results: Optional[List[str]] = None) -> List[StoredAudioData | StoredTextData]:
+                     include_results: Optional[List[str]] = None,
+                     jmespath_schema: Optional[str] = None) -> List[StoredAudioData | StoredTextData]:
         if filter is None:
             filter = SearchParams()
         resp = await self.client.get(f"/{self.client.client_id}/{self.data_source}/search",
@@ -53,9 +54,13 @@ class AsyncMostSearcher(object):
                                          "filter": filter.to_json(),
                                          "limit": limit,
                                          "include_data": include_data,
-                                         "include_results": include_results
+                                         "include_results": include_results,
+                                         **({"__schema": jmespath_schema} if jmespath_schema is not None else {})
                                      })
         if resp.status_code >= 400:
             raise RuntimeError("Audio can't be indexed")
+        if jmespath_schema is not None:
+            return resp.json()
+
         data_list = resp.json()
         return self.client.retort.load(data_list, List[StoredAudioData | StoredTextData])
