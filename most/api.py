@@ -163,6 +163,7 @@ class MostClient(object):
             self.refresh_access_token()
         headers = kwargs.pop("headers", {})
         headers.update({"Authorization": "Bearer %s" % self.access_token})
+        headers.update(kwargs.get("headers", {}))
         resp = self.session.post(url,
                                  data=data,
                                  json=json,
