@@ -94,6 +94,15 @@ class JobStatus(DataClassJsonMixin):
 
 @dataclass_json
 @dataclass
+class UpdateResult(DataClassJsonMixin):
+    column_name: str
+    subcolumn_name: str
+    score: Optional[int] = None
+    description: Optional[str] = None
+
+
+@dataclass_json
+@dataclass
 class Result(DataClassJsonMixin):
     id: str
     text: Optional[str] = None

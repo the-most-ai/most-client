@@ -19,7 +19,7 @@ from most.types import (
     StoredAudioData,
     StoredTextData,
     Text,
-    is_valid_id, ScriptScoreMapping, Dialog, Usage, ModelInfo,
+    is_valid_id, ScriptScoreMapping, Dialog, Usage, ModelInfo, UpdateResult,
 )
 
 
@@ -363,6 +363,27 @@ class AsyncMostClient(object):
 
         resp = await self.post(f"/{self.client_id}/{data_source}/{data_id}/model/{self.model_id}/apply_status")
         return self.retort.load(resp.json(), JobStatus)
+
+    async def update_results(self, data_id, updates: List[UpdateResult],
+                             scores_modified: bool = False,
+                             data_source: Literal["text", "audio"] = "audio"):
+        if not is_valid_id(self.model_id):
+            raise RuntimeError("Please choose valid model to apply. [try list_models()]")
+
+        if not is_valid_id(data_id):
+            raise RuntimeError("Please use valid data_id. [try audio.id / text.id from list_audios() / list_texts()]")
+
+        score_modifier = await self.get_score_modifier()
+        if scores_modified:
+            updates = [score_modifier.unmodify(update)
+                       for update in updates]
+
+        resp = await self.put(f"/{self.client_id}/{data_source}/{data_id}/model/{self.model_id}/results",
+                              json={"updates": [update.to_dict() for update in updates]},)
+        result = self.retort.load(resp.json(), Result)
+        if scores_modified:
+            result = score_modifier.modify(result)
+        return result
 
     async def fetch_results(self, data_id: str,
                             modify_scores: bool = False,

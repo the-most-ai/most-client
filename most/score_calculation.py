@@ -1,7 +1,7 @@
 from typing import Dict, Tuple, List, Optional, Literal
 from dataclasses_json import dataclass_json, DataClassJsonMixin
 from dataclasses import dataclass, replace
-from .types import Result, ScriptScoreMapping
+from .types import Result, ScriptScoreMapping, UpdateResult
 
 
 @dataclass_json
@@ -9,13 +9,21 @@ from .types import Result, ScriptScoreMapping
 class ScoreCalculation(DataClassJsonMixin):
     score_mapping: List[ScriptScoreMapping]
 
-    def modify(self, result: Optional[Result]):
+    def modify(self, result: Optional[Result | UpdateResult]) -> Optional[Result | UpdateResult]:
         score_mapping = {
             (sm.column, sm.subcolumn, sm.from_score): sm.to_score
             for sm in self.score_mapping
         }
         if result is None:
             return None
+
+        if isinstance(result, UpdateResult):
+            score = score_mapping.get((result.column,
+                                       result.subcolumn,
+                                       result.score),
+                                      result.score)
+            return replace(result, score=score)
+
         result = replace(result)
         for column_result in result.results:
             for subcolumn_result in column_result.subcolumns:
@@ -26,13 +34,21 @@ class ScoreCalculation(DataClassJsonMixin):
 
         return result
 
-    def unmodify(self, result: Optional[Result]):
+    def unmodify(self, result: Optional[Result | UpdateResult]) -> Optional[Result | UpdateResult]:
         score_mapping = {
             (sm.column, sm.subcolumn, sm.to_score): sm.from_score
             for sm in self.score_mapping
         }
         if result is None:
             return None
+
+        if isinstance(result, UpdateResult):
+            score = score_mapping.get((result.column,
+                                       result.subcolumn,
+                                       result.score),
+                                      result.score)
+            return replace(result, score=score)
+
         result = replace(result)
         for column_result in result.results:
             for subcolumn_result in column_result.subcolumns:

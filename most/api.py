@@ -18,7 +18,7 @@ from most.types import (
     Script,
     StoredAudioData,
     Text,
-    is_valid_id, ScriptScoreMapping, Dialog, Usage, ModelInfo, StoredTextData
+    is_valid_id, ScriptScoreMapping, Dialog, Usage, ModelInfo, StoredTextData, UpdateResult
 )
 
 
@@ -359,6 +359,26 @@ class MostClient(object):
         resp = self.get(f"/{self.client_id}/{data_source}/{data_id}/model/{self.model_id}/results")
         result = self.retort.load(resp.json(), Result)
         if modify_scores:
+            result = self.get_score_modifier().modify(result)
+        return result
+
+    def update_results(self, data_id, updates: List[UpdateResult],
+                       scores_modified: bool = False,
+                       data_source: Literal["text", "audio"] = "audio"):
+        if not is_valid_id(self.model_id):
+            raise RuntimeError("Please choose valid model to apply. [try list_models()]")
+
+        if not is_valid_id(data_id):
+            raise RuntimeError("Please use valid data_id. [try audio.id / text.id from list_audios() / list_texts()]")
+
+        if scores_modified:
+            updates = [self.get_score_modifier().unmodify(update)
+                       for update in updates]
+
+        resp = self.put(f"/{self.client_id}/{data_source}/{data_id}/model/{self.model_id}/results",
+                        json={"updates": [update.to_dict() for update in updates]},)
+        result = self.retort.load(resp.json(), Result)
+        if scores_modified:
             result = self.get_score_modifier().modify(result)
         return result
 
