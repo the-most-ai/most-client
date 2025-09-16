@@ -100,6 +100,9 @@ class UpdateResult(DataClassJsonMixin):
     score: Optional[int] = None
     description: Optional[str] = None
 
+    data: Optional[Dict[str, Union[str, int, float]]] = None
+    timestamp: Optional[int] = None
+
 
 @dataclass_json
 @dataclass
@@ -110,6 +113,8 @@ class Result(DataClassJsonMixin):
     results: Optional[List[ColumnResult]] = None
     created_at: Optional[datetime] = None
     applied_at: Optional[datetime] = None
+
+    edits: Optional[List[UpdateResult]] = None
 
     def get_script(self) -> Optional[Script]:
         if self.results is None:
