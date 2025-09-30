@@ -540,3 +540,14 @@ class MostClient(object):
                              "audio_ids": audio_ids,
                          })
         return resp.json()
+
+    def anonymize(self, text: str) -> str:
+        resp = self.post(f"https://api-anon.the-most.ai/anonymize",
+                         json={
+                             "text": text,
+                         })
+        resp.raise_for_status()
+        data = resp.json()
+        if "text" not in data:
+            raise RuntimeError("Anonymization failed")
+        return data["text"]
