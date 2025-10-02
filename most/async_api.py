@@ -428,14 +428,17 @@ class AsyncMostClient(object):
                               params=params)
         return self.retort.load(resp.json(), DialogResult)
 
-    async def update_dialog(self, audio_id, dialog: Dialog) -> DialogResult:
+    async def update_dialog(self,
+                            data_id,
+                            dialog: Dialog,
+                            data_source: Literal["audio", "text"] = "audio") -> DialogResult:
         if not is_valid_id(self.model_id):
             raise RuntimeError("Please choose valid model to apply. [try list_models()]")
 
-        if not is_valid_id(audio_id):
-            raise RuntimeError("Please use valid audio_id. [try audio.id from list_audios()]")
+        if not is_valid_id(data_id):
+            raise RuntimeError("Please use valid data_id. [try audio.id from list_audios()]")
 
-        resp = await self.put(f"/{self.client_id}/audio/{audio_id}/model/{self.model_id}/dialog",
+        resp = await self.put(f"/{self.client_id}/{data_source}/{data_id}/model/{self.model_id}/dialog",
                               json={"dialog": dialog.to_dict()})
         return self.retort.load(resp.json(), DialogResult)
 
