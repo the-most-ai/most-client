@@ -186,10 +186,10 @@ class MostClient(object):
                          json={"text": text})
         return self.retort.load(resp.json(), Text)
 
-    def upload_dialog(self, dialog: Dialog) -> DialogResult:
+    def upload_dialog(self, dialog: Dialog) -> Text:
         resp = self.post(f"/{self.client_id}/upload_dialog",
-                         json={"dialog": dialog})
-        return self.retort.load(resp.json(), DialogResult)
+                         json={"dialog": dialog.to_dict()})
+        return self.retort.load(resp.json(), Text)
 
     def upload_audio(self, audio_path) -> Audio:
         with open(audio_path, 'rb') as f:

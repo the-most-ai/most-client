@@ -216,10 +216,10 @@ class AsyncMostClient(object):
                                json={"text": text})
         return self.retort.load(resp.json(), Text)
 
-    async def upload_dialog(self, dialog: Dialog) -> DialogResult:
+    async def upload_dialog(self, dialog: Dialog) -> Text:
         resp = await self.post(f"/{self.client_id}/upload_dialog",
-                               json={"dialog": dialog})
-        return self.retort.load(resp.json(), DialogResult)
+                               json={"dialog": dialog.to_dict()})
+        return self.retort.load(resp.json(), Text)
 
     async def upload_audio_url(self, audio_url) -> Audio:
         resp = await self.post(f"/{self.client_id}/upload_url",
