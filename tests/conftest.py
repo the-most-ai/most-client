@@ -33,16 +33,15 @@ def most_client(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> MostClient:
             model_id=model_id,
         )
     except httpx.HTTPError as exc:
-        pytest.skip(f"MOST API unavailable: {exc}")
+        pytest.fail(f"MOST API unavailable: {exc}")
 
     if not model_id:
         try:
             models = client.list_models()
         except httpx.HTTPError as exc:
-            pytest.skip(f"Unable to list MOST models: {exc}")
-        if not models:
-            pytest.skip("MOST API returned no models for the configured client")
-        client.model_id = models[0].model_id
+            pytest.fail(f"Unable to list MOST models: {exc}")
+        if models:
+            client = models[0]
     try:
         yield client
     finally:
