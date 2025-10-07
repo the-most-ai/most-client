@@ -25,4 +25,9 @@ def test_upload_text_and_audio_roundtrip(most_client, tmp_path: Path) -> None:
     assert audio.id
     assert audio.url
     if most_client.model_id:
-        most_client.transcribe_later(audio.id)
+        result = most_client.apply(audio.id,
+                                   overwrite=True)
+        assert result.id
+        assert result.url == audio.url
+        assert result.results
+
