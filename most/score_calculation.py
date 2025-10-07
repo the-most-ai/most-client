@@ -18,8 +18,8 @@ class ScoreCalculation(DataClassJsonMixin):
             return None
 
         if isinstance(result, UpdateResult):
-            score = score_mapping.get((result.column,
-                                       result.subcolumn,
+            score = score_mapping.get((result.column_name,
+                                       result.subcolumn_name,
                                        result.score),
                                       result.score)
             return replace(result, score=score)
@@ -43,8 +43,8 @@ class ScoreCalculation(DataClassJsonMixin):
             return None
 
         if isinstance(result, UpdateResult):
-            score = score_mapping.get((result.column,
-                                       result.subcolumn,
+            score = score_mapping.get((result.column_name,
+                                       result.subcolumn_name,
                                        result.score),
                                       result.score)
             return replace(result, score=score)
