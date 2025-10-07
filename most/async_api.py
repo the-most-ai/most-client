@@ -44,7 +44,8 @@ class AsyncMostClient(object):
                  timeout: Union[float, httpx.Timeout] = 1e10,
                  max_retries: int = DEFAULT_MAX_RETRIES,
                  # retry_delay: float = 0,
-                 http_client: httpx.AsyncClient | None = None):
+                 http_client: httpx.AsyncClient | None = None,
+                 debug: bool = False,):
         super(AsyncMostClient, self).__init__()
         self.client_id = client_id
         self.client_secret = client_secret
@@ -78,6 +79,7 @@ class AsyncMostClient(object):
         self.access_token = None
         self.model_id = model_id
         self.score_modifier: Optional[ScoreCalculation] = None
+        self.debug = debug
 
     async def __aenter__(self):
         await self.session.__aenter__()
