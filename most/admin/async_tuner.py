@@ -12,6 +12,17 @@ class AsyncTuner(object):
         self.username = username
         self.password = password
 
+    async def list_clients(self):
+        resp = await self.client.get(
+            self.admin_base_url + f"/list",
+            headers={
+                "X-API-KEY": f"{self.username}:{self.password}"
+            }
+        )
+        resp.raise_for_status()
+        return [AsyncMostClient(**credentials)
+                for credentials in resp.json()]
+
     async def submit(self,
                      column: str,
                      subcolumn: str,
@@ -35,3 +46,25 @@ class AsyncTuner(object):
 
         resp.raise_for_status()
         return resp.json()
+
+    async def clone_model(self,
+                          model_name: str,
+                          transcribator_name: str,
+                          llm_name: str):
+        resp = await self.client.post(
+            self.admin_base_url + f"/{self.client.client_id}/model/{self.client.model_id}/clone",
+            json={
+                "model_name": model_name,
+                "transcribator_name": transcribator_name,
+                "llm_name": llm_name,
+            },
+            headers={
+                "X-API-KEY": f"{self.username}:{self.password}"
+            }
+        )
+
+        resp.raise_for_status()
+        resp = resp.json()
+        if "model" not in resp:
+            raise Exception(f"Failed to clone model: {resp['message']}")
+        return self.client.with_model(resp["model"])
