@@ -583,6 +583,16 @@ class MostClient(object):
                          })
         return resp.json()
 
+    def delete_audio(self, audio_id: str):
+        resp = self.delete(f"/{self.client_id}/audio/{audio_id}/delete")
+        resp.raise_for_status()
+        return resp.json()
+
+    def delete_text(self, text_id: str):
+        resp = self.delete(f"/{self.client_id}/text/{text_id}/delete")
+        resp.raise_for_status()
+        return resp.json()
+
     def anonymize(self, text: str) -> str:
         resp = self.post(f"https://api-anon.the-most.ai/anonymize",
                          json={
