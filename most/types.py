@@ -2,6 +2,9 @@ import re
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from typing import Dict, List, Literal, Optional, Union
+
+import aiofiles
+import httpx
 from dataclasses_json import DataClassJsonMixin, dataclass_json
 
 
@@ -19,6 +22,20 @@ class StoredAudioData(DataClassJsonMixin):
 class Audio(DataClassJsonMixin):
     id: str
     url: str
+
+    async def download_async(self, cached_path):
+        print(f"Downloading {self.url} -> {cached_path}")
+        async with httpx.AsyncClient() as client:
+            async with aiofiles.open(cached_path, "wb") as f:
+                resp = await client.get(self.url, headers={"User-Agent": "most"})
+                await f.write(resp.content)
+
+    def download(self, cached_path):
+        print(f"Downloading {self.url} -> {cached_path}")
+        with httpx.Client() as client:
+            with open(cached_path, "wb") as f:
+                resp = client.get(self.url, headers={"User-Agent": "most"})
+                f.write(resp.content)
 
 
 @dataclass_json

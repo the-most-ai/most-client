@@ -169,6 +169,24 @@ class AsyncMostClient(object):
             raise RuntimeError(resp.json()['message'] if resp.headers.get("Content-Type") == "application/json" else "Something went wrong.")
         return resp
 
+    async def delete(self, url, **kwargs):
+        if self.access_token is None:
+            await self.refresh_access_token()
+        headers = kwargs.pop("headers", {})
+        headers.update({"Authorization": "Bearer %s" % self.access_token})
+        resp = await self.session.delete(url,
+                                         headers=headers,
+                                         timeout=None,
+                                         **kwargs)
+        if resp.status_code == 401:
+            await self.refresh_access_token()
+            return await self.delete(url,
+                                     headers=headers,
+                                     **kwargs)
+        if resp.status_code >= 400:
+            raise RuntimeError(resp.json()['message'] if resp.headers.get("Content-Type") == "application/json" else "Something went wrong.")
+        return resp
+
     async def post(self, url,
                    data=None,
                    json=None,
@@ -191,7 +209,9 @@ class AsyncMostClient(object):
                                    json=json,
                                    headers=headers,
                                    **kwargs)
+        resp.raise_for_status()
         if resp.status_code >= 400:
+            print(resp.content)
             raise RuntimeError(resp.json()['message'] if resp.headers.get(
                 "Content-Type") == "application/json" else "Something went wrong.")
         return resp
@@ -227,6 +247,27 @@ class AsyncMostClient(object):
         resp = await self.post(f"/{self.client_id}/upload_url",
                                json={"audio_url": audio_url})
         return self.retort.load(resp.json(), Audio)
+
+    async def remove_tags(self, data_id, tags: Union[str, List[str]],
+                          data_source: Literal["text", "audio"] = "audio"):
+        if not isinstance(tags, list):
+            tags = [tags]
+        resp = await self.delete(f"/{self.client_id}/{data_source}/{data_id}/tags",
+                                 params={"tags": tags})
+        return resp.json()
+
+    async def add_tags(self, data_id, tags: Union[str, List[str]],
+                       data_source: Literal["text", "audio"] = "audio"):
+        if not isinstance(tags, list):
+            tags = [tags]
+        resp = await self.put(f"/{self.client_id}/{data_source}/{data_id}/tags",
+                               params={"tags": tags})
+        return resp.json()
+
+    async def get_tags(self, data_id,
+                       data_source: Literal["text", "audio"] = "audio"):
+        resp = await self.get(f"/{self.client_id}/{data_source}/{data_id}/tags")
+        return resp.json()
 
     async def list_audios(self,
                           offset: int = 0,
@@ -558,6 +599,16 @@ class AsyncMostClient(object):
                                    "text_ids": text_ids,
                                    "audio_ids": audio_ids,
                                })
+        return resp.json()
+
+    async def delete_audio(self, audio_id: str):
+        resp = await self.delete(f"/{self.client_id}/audio/{audio_id}/delete")
+        resp.raise_for_status()
+        return resp.json()
+
+    async def delete_text(self, text_id: str):
+        resp = await self.delete(f"/{self.client_id}/text/{text_id}/delete")
+        resp.raise_for_status()
         return resp.json()
 
     async def anonymize(self, text: str) -> str:
