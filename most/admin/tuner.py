@@ -1,3 +1,5 @@
+from typing import Literal
+
 from ..api import MostClient
 
 
@@ -67,3 +69,13 @@ class Tuner(object):
         if "model" not in resp:
             raise Exception(f"Failed to clone model: {resp['message']}")
         return self.client.with_model(resp["model"])
+
+    def get_cost(self, data_id: str,
+                 data_source: Literal["text", "audio"] = "audio"):
+        resp = self.client.get(
+            self.admin_base_url + f"/{self.client.client_id}/model/{self.client.model_id}/{data_source}/{data_id}/cost",
+            headers={
+                "X-API-KEY": f"{self.username}:{self.password}"
+            }
+        )
+        return resp.json()
