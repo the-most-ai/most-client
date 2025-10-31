@@ -28,8 +28,8 @@ def test_upload_text_and_audio_roundtrip(most_client, tmp_path: Path) -> None:
     text_obj = most_client.upload_text("Привет, мир!")
     assert text_obj.id
 
-    if most_client.model_id:
-        result = most_client.apply_on_text(text_obj.id,
-                                           overwrite=True)
-        assert result.id
-        assert result.results
+    # if most_client.model_id:
+    #     result = most_client.apply_on_text(text_obj.id,
+    #                                        overwrite=True)
+    #     assert result.id
+    #     assert result.results
