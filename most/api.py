@@ -18,7 +18,7 @@ from most.types import (
     Script,
     StoredAudioData,
     Text,
-    is_valid_id, ScriptScoreMapping, Dialog, Usage, ModelInfo, StoredTextData, UpdateResult
+    is_valid_id, is_valid_objectid, ScriptScoreMapping, Dialog, Usage, ModelInfo, StoredTextData, UpdateResult
 )
 
 
@@ -72,6 +72,8 @@ class MostClient(object):
         self.session = http_client
         self.access_token = None
         self.model_id = model_id
+        self.model_alias = None if self.model_id is None or is_valid_objectid(self.model_id[len("most-"):]) else self.model_id
+        self.released = None
         self.score_modifier = None
 
         self.refresh_access_token()
@@ -105,9 +107,13 @@ class MostClient(object):
         client.score_modifier = self.score_modifier
         return client
 
-    def with_model(self, model_id):
+    def with_model(self, model_id,
+                   alias=None,
+                   released=None):
         client = self.clone()
         client.model_id = model_id
+        client.model_alias = alias if alias is not None or is_valid_objectid(model_id[len("most-"):]) else model_id
+        client.released = released
         client.score_modifier = None
         return client
 
@@ -296,7 +302,9 @@ class MostClient(object):
 
     def list_models(self):
         resp = self.get("/list_models")
-        return [self.with_model(model['model'])
+        return [self.with_model(model['model'],
+                                alias=model.get("alias"),
+                                released=model.get("released"))
                 for model in resp.json()]
 
     def apply(self, audio_id,
@@ -526,7 +534,12 @@ class MostClient(object):
                           modify_scores=modify_scores)
 
     def __repr__(self):
-        return "<MostClient(model_id='%s')>" % (self.model_id, )
+        model_name = self.model_alias if self.model_alias is not None else self.model_id
+        args = [model_name]
+        if self.released:
+            args.append("released")
+
+        return "<MostClient(model_id='%s')>" % (", ".join(args), )
 
     def get_audio_segment_by_url(self, audio_url,
                                  format=None):

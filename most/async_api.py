@@ -19,7 +19,7 @@ from most.types import (
     StoredAudioData,
     StoredTextData,
     Text,
-    is_valid_id, ScriptScoreMapping, Dialog, Usage, ModelInfo, UpdateResult,
+    is_valid_id, ScriptScoreMapping, Dialog, Usage, ModelInfo, UpdateResult, is_valid_objectid,
 )
 
 
@@ -77,7 +77,11 @@ class AsyncMostClient(object):
         # self.retry_delay = retry_delay
         self.session = http_client
         self.access_token = None
+
         self.model_id = model_id
+        self.model_alias = None if self.model_id is None or is_valid_objectid(self.model_id[len("most-"):]) else self.model_id
+        self.released = None
+
         self.score_modifier: Optional[ScoreCalculation] = None
         self.debug = debug
 
@@ -118,9 +122,13 @@ class AsyncMostClient(object):
         client.score_modifier = self.score_modifier
         return client
 
-    def with_model(self, model_id):
+    def with_model(self, model_id,
+                   alias=None,
+                   released=None):
         client = self.clone()
         client.model_id = model_id
+        client.model_alias = alias if alias is not None or is_valid_objectid(model_id[len("most-"):]) else model_id
+        client.released = released
         client.score_modifier = None
         return client
 
@@ -306,7 +314,9 @@ class AsyncMostClient(object):
 
     async def list_models(self):
         resp = await self.get("/list_models")
-        return [self.with_model(model['model'])
+        return [self.with_model(model['model'],
+                                released=model.get("released"),
+                                alias=model.get("alias"))
                 for model in resp.json()]
 
     async def get_model_info(self):
@@ -544,7 +554,12 @@ class AsyncMostClient(object):
                                 modify_scores=modify_scores)
 
     def __repr__(self):
-        return "<AsyncMostClient(model_id='%s')>" % (self.model_id, )
+        model_name = self.model_alias if self.model_alias is not None else self.model_id
+        args = [model_name]
+        if self.released:
+            args.append("released")
+
+        return "<AsyncMostClient(model_id='%s')>" % (", ".join(args), )
 
     async def get_audio_segment_by_url(self, audio_url,
                                        format=None):
