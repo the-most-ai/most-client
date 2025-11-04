@@ -107,13 +107,22 @@ class MostClient(object):
         client.score_modifier = self.score_modifier
         return client
 
-    def with_model(self, model_id,
+    def with_model(self,
+                   model_id: Optional[str] = None,
                    alias=None,
                    released=None):
         client = self.clone()
         client.model_id = model_id
-        client.model_alias = alias if alias is not None or is_valid_objectid(model_id[len("most-"):]) else model_id
+        client.model_alias = alias if alias is not None or model_id is None or is_valid_objectid(model_id[len("most-"):]) else model_id
         client.released = released
+        client.score_modifier = None
+        return client
+
+    def without_model(self):
+        client = self.clone()
+        client.model_id = None
+        client.model_alias = None
+        client.released = None
         client.score_modifier = None
         return client
 

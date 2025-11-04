@@ -71,6 +71,17 @@ class AsyncTuner(object):
             raise Exception(f"Failed to clone model: {resp['message']}")
         return self.client.with_model(resp["model"])
 
+    async def delete_model(self, model_id: str):
+        resp = await self.client.post(
+            self.admin_base_url + f"/{self.client.client_id}/model/{model_id}/delete",
+            headers={
+                "X-API-KEY": f"{self.username}:{self.password}"
+            }
+        )
+
+        resp.raise_for_status()
+        return resp.json()
+
     async def get_cost(self, data_id: str,
                        data_source: Literal["text", "audio"] = "audio"):
         resp = await self.client.get(
