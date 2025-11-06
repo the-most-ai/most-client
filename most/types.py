@@ -1,3 +1,4 @@
+import copy
 import re
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
@@ -141,6 +142,34 @@ class Result(DataClassJsonMixin):
                                       subcolumns=[subcolumn_result.name
                                                   for subcolumn_result in column_result.subcolumns])
                                for column_result in self.results])
+
+    def apply_edits(self, inplace=True):
+        result = self
+        if not inplace:
+            result = copy.deepcopy(self)
+
+        if result.edits is None:
+            return result
+
+        if result.results is None:
+            return result
+
+        edits = sorted(result.edits, key=lambda x: x.timestamp)
+        for edit in edits:
+            column = next((c for c in result.results
+                           if c.name == edit.column_name), None)
+            if column is None:
+                continue
+            subcolumn = next((s for s in column.subcolumns
+                              if s.name == edit.subcolumn_name), None)
+            if subcolumn is None:
+                continue
+            if edit.score is not None:
+                subcolumn.score = edit.score
+            if edit.description is not None:
+                subcolumn.description = edit.description
+        result.edits = None
+        return result
 
 
 @dataclass_json
