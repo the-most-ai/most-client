@@ -14,9 +14,55 @@ class AsyncTuner(object):
         self.username = username
         self.password = password
 
+    def with_client(self, client: AsyncMostClient):
+        return AsyncTuner(client, self.username, self.password)
+
+    async def get_model_info(self):
+        resp = await self.client.get(
+            self.admin_base_url + f"/{self.client.client_id}/model/{self.client.model_id}/card",
+            headers={
+                "X-API-KEY": f"{self.username}:{self.password}"
+            }
+        )
+
+        resp.raise_for_status()
+        resp = resp.json()
+        return resp
+
+    async def list_transcribers(self):
+        resp = await self.client.get(
+            self.admin_base_url + f"/transcribers/list",
+            headers={
+                "X-API-KEY": f"{self.username}:{self.password}"
+            }
+        )
+        resp.raise_for_status()
+        return resp.json()
+
+    async def list_llms(self):
+        resp = await self.client.get(
+            self.admin_base_url + f"/llms/list",
+            headers={
+                "X-API-KEY": f"{self.username}:{self.password}"
+            }
+        )
+        resp.raise_for_status()
+        return resp.json()
+
     async def list_clients(self):
         resp = await self.client.get(
             self.admin_base_url + f"/list",
+            headers={
+                "X-API-KEY": f"{self.username}:{self.password}"
+            }
+        )
+        resp.raise_for_status()
+        return [AsyncMostClient(**credentials)
+                for credentials in resp.json()]
+
+    async def list_production_clients(self):
+        resp = await self.client.get(
+            self.admin_base_url + f"/models/list",
             headers={
                 "X-API-KEY": f"{self.username}:{self.password}"
             }

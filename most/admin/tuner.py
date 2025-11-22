@@ -14,9 +14,55 @@ class Tuner(object):
         self.username = username
         self.password = password
 
+    def with_client(self, client: MostClient):
+        return Tuner(client, self.username, self.password)
+
+    def get_model_info(self):
+        resp = self.client.get(
+            self.admin_base_url + f"/{self.client.client_id}/model/{self.client.model_id}/card",
+            headers={
+                "X-API-KEY": f"{self.username}:{self.password}"
+            }
+        )
+
+        resp.raise_for_status()
+        resp = resp.json()
+        return resp
+
+    def list_transcribers(self):
+        resp = self.client.get(
+            self.admin_base_url + f"/transcribers/list",
+            headers={
+                "X-API-KEY": f"{self.username}:{self.password}"
+            }
+        )
+        resp.raise_for_status()
+        return resp.json()
+
+    def list_llms(self):
+        resp = self.client.get(
+            self.admin_base_url + f"/llms/list",
+            headers={
+                "X-API-KEY": f"{self.username}:{self.password}"
+            }
+        )
+        resp.raise_for_status()
+        return resp.json()
+
     def list_clients(self):
         resp = self.client.get(
             self.admin_base_url + f"/list",
+            headers={
+                "X-API-KEY": f"{self.username}:{self.password}"
+            }
+        )
+        resp.raise_for_status()
+        return [MostClient(**credentials)
+                for credentials in resp.json()]
+
+    def list_production_clients(self):
+        resp = self.client.get(
+            self.admin_base_url + f"/models/list",
             headers={
                 "X-API-KEY": f"{self.username}:{self.password}"
             }
