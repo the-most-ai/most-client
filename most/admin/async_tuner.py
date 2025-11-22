@@ -118,7 +118,7 @@ class AsyncTuner(object):
         return self.client.with_model(resp["model"])
 
     async def delete_model(self, model_id: str):
-        resp = await self.client.post(
+        resp = await self.client.delete(
             self.admin_base_url + f"/{self.client.client_id}/model/{model_id}/delete",
             headers={
                 "X-API-KEY": f"{self.username}:{self.password}"

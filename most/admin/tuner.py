@@ -117,7 +117,7 @@ class Tuner(object):
         return self.client.with_model(resp["model"])
 
     def delete_model(self, model_id: str):
-        resp = self.client.post(
+        resp = self.client.delete(
             self.admin_base_url + f"/{self.client.client_id}/model/{model_id}/delete",
             headers={
                 "X-API-KEY": f"{self.username}:{self.password}"
