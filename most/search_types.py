@@ -69,6 +69,7 @@ class AggregatedField(DataClassJsonMixin):
 class AggregatedResultsCondition(DataClassJsonMixin):
     fields: List[AggregatedField]
     model_id: str
+    aggregation: Literal["sum", "avg", "min", "max", "median"] = "sum"
 
     greater_than: Optional[int] = None
     less_than: Optional[int] = None
