@@ -59,14 +59,39 @@ class StoredInfoCondition(DataClassJsonMixin):
 
 @dataclass_json
 @dataclass
+class AggregatedField(DataClassJsonMixin):
+    column_idx: int
+    subcolumn_idx: int
+
+
+@dataclass_json
+@dataclass
+class AggregatedResultsCondition(DataClassJsonMixin):
+    fields: List[AggregatedField]
+    model_id: str
+
+    greater_than: Optional[int] = None
+    less_than: Optional[int] = None
+
+    modified: bool = False
+
+    type: Literal["AggregatedResultsCondition"] = "AggregatedResultsCondition"
+
+
+@dataclass_json
+@dataclass
 class ResultsCondition(DataClassJsonMixin):
     column_idx: int
     subcolumn_idx: int
     model_id: str
+
     score_equal: Optional[int] = None
     score_in_set: Optional[List[int]] = None
     score_greater_than: Optional[int] = None
     score_less_than: Optional[int] = None
+
+    modified: bool = False
+
     type: Literal["ResultsCondition"] = "ResultsCondition"
 
     def create_from(self, client,
@@ -159,7 +184,7 @@ class ResultsCondition(DataClassJsonMixin):
 @dataclass_json
 @dataclass
 class SearchParams(DataClassJsonMixin):
-    must: List[StoredInfoCondition | ResultsCondition | DurationCondition | ChannelsCondition | IDCondition | TagsCondition | URLCondition] = field(default_factory=list)
-    should: List[StoredInfoCondition | ResultsCondition | DurationCondition | ChannelsCondition | IDCondition | TagsCondition | URLCondition ] = field(default_factory=list)
-    must_not: List[StoredInfoCondition | ResultsCondition | DurationCondition | ChannelsCondition | IDCondition | TagsCondition | URLCondition ] = field(default_factory=list)
-    should_not: List[StoredInfoCondition | ResultsCondition | DurationCondition | ChannelsCondition | IDCondition | TagsCondition | URLCondition ] = field(default_factory=list)
+    must: List[StoredInfoCondition | AggregatedResultsCondition | ResultsCondition | DurationCondition | ChannelsCondition | IDCondition | TagsCondition | URLCondition] = field(default_factory=list)
+    should: List[StoredInfoCondition | AggregatedResultsCondition | ResultsCondition | DurationCondition | ChannelsCondition | IDCondition | TagsCondition | URLCondition ] = field(default_factory=list)
+    must_not: List[StoredInfoCondition | AggregatedResultsCondition | ResultsCondition | DurationCondition | ChannelsCondition | IDCondition | TagsCondition | URLCondition ] = field(default_factory=list)
+    should_not: List[StoredInfoCondition | AggregatedResultsCondition | ResultsCondition | DurationCondition | ChannelsCondition | IDCondition | TagsCondition | URLCondition ] = field(default_factory=list)
