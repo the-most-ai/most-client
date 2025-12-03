@@ -337,7 +337,8 @@ class AsyncMostClient(object):
 
     async def apply(self, audio_id,
                     modify_scores: bool = False,
-                    overwrite: bool = False) -> Result:
+                    overwrite: bool = False,
+                    job_id: Optional[str] = None) -> Result:
         if not is_valid_id(self.model_id):
             raise RuntimeError("Please choose valid model to apply. [try list_models()]")
 
@@ -345,7 +346,8 @@ class AsyncMostClient(object):
             raise RuntimeError("Please use valid audio_id. [try audio.id from list_audios()]")
 
         resp = await self.post(f"/{self.client_id}/audio/{audio_id}/model/{self.model_id}/apply",
-                               params={"overwrite": overwrite})
+                               params={"overwrite": overwrite,
+                                       "job_id": job_id})
         result = self.retort.load(resp.json(), Result)
         if modify_scores:
             score_modifier = await self.get_score_modifier()
@@ -354,7 +356,8 @@ class AsyncMostClient(object):
 
     async def apply_on_text(self, text_id,
                             modify_scores: bool = False,
-                            overwrite: bool = False) -> Result:
+                            overwrite: bool = False,
+                            job_id: Optional[str] = None) -> Result:
         if not is_valid_id(self.model_id):
             raise RuntimeError("Please choose valid model to apply. [try list_models()]")
 
@@ -362,7 +365,8 @@ class AsyncMostClient(object):
             raise RuntimeError("Please use valid text_id. [try text.id from list_texts()]")
 
         resp = await self.post(f"/{self.client_id}/text/{text_id}/model/{self.model_id}/apply",
-                               params={"overwrite": overwrite})
+                               params={"overwrite": overwrite,
+                                       "job_id": job_id})
         result = self.retort.load(resp.json(), Result)
         if modify_scores:
             score_modifier = await self.get_score_modifier()
@@ -383,7 +387,8 @@ class AsyncMostClient(object):
 
     async def apply_later(self, audio_id,
                           modify_scores: bool = False,
-                          overwrite: bool = False) -> Result:
+                          overwrite: bool = False,
+                          job_id: Optional[str] = None) -> Result:
         if not is_valid_id(self.model_id):
             raise RuntimeError("Please choose valid model to apply. [try list_models()]")
 
@@ -391,7 +396,8 @@ class AsyncMostClient(object):
             raise RuntimeError("Please use valid audio_id. [try audio.id from list_audios()]")
 
         resp = await self.post(f"/{self.client_id}/audio/{audio_id}/model/{self.model_id}/apply_async",
-                               params={"overwrite": overwrite})
+                               params={"overwrite": overwrite,
+                                       "job_id": job_id})
         result = self.retort.load(resp.json(), Result)
         if modify_scores:
             score_modifier = await self.get_score_modifier()
@@ -400,7 +406,8 @@ class AsyncMostClient(object):
 
     async def apply_on_text_later(self, text_id,
                                   modify_scores: bool = False,
-                                  overwrite: bool = False) -> Result:
+                                  overwrite: bool = False,
+                                  job_id: Optional[str] = None) -> Result:
         if not is_valid_id(self.model_id):
             raise RuntimeError("Please choose valid model to apply. [try list_models()]")
 
@@ -408,7 +415,8 @@ class AsyncMostClient(object):
             raise RuntimeError("Please use valid text_id. [try audio.id from list_texts()]")
 
         resp = await self.post(f"/{self.client_id}/text/{text_id}/model/{self.model_id}/apply_async",
-                               params={"overwrite": overwrite})
+                               params={"overwrite": overwrite,
+                                       "job_id": job_id})
         result = self.retort.load(resp.json(), Result)
         if modify_scores:
             score_modifier = await self.get_score_modifier()
