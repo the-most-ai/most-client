@@ -62,12 +62,26 @@ class StoredInfoCondition(DataClassJsonMixin):
 class AggregatedField(DataClassJsonMixin):
     column_idx: int
     subcolumn_idx: int
+    type: Literal["AggregatedField"] = "AggregatedField"
+
+
+@dataclass_json
+@dataclass
+class AggregatedColumnField(DataClassJsonMixin):
+    column_idx: int
+    type: Literal["AggregatedColumnField"] = "AggregatedColumnField"
+
+
+@dataclass_json
+@dataclass
+class AggregatedAllField(DataClassJsonMixin):
+    type: Literal["AggregatedAllField"] = "AggregatedAllField"
 
 
 @dataclass_json
 @dataclass
 class AggregatedResultsCondition(DataClassJsonMixin):
-    fields: List[AggregatedField]
+    fields: List[AggregatedField | AggregatedColumnField | AggregatedAllField]
     model_id: str
     aggregation: Literal["sum", "avg", "min", "max"] = "sum"
 
