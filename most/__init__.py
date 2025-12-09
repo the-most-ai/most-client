@@ -9,4 +9,12 @@ from .glossary import Glossary
 from .async_glossary import AsyncGlossary
 from .catalog import Catalog
 from .async_catalog import AsyncCatalog
-from .types import GlossaryNGram, Item, UpdateResult
+from .types import (
+    GlossaryNGram,
+    Item,
+    UpdateResult,
+    CommunicationRequest,
+    CommunicationBatchRequest,
+    CommunicationBatchResponse,
+    CommunicationResponse,
+)

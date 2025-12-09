@@ -3,7 +3,7 @@ import os
 import uuid
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Dict, List, Optional, Union, Literal
+from typing import Dict, List, Optional, Union, Literal, Any
 import json5
 import httpx
 from adaptix import Retort, loader
@@ -18,7 +18,8 @@ from most.types import (
     Script,
     StoredAudioData,
     Text,
-    is_valid_id, is_valid_objectid, ScriptScoreMapping, Dialog, Usage, ModelInfo, StoredTextData, UpdateResult
+    is_valid_id, is_valid_objectid, ScriptScoreMapping, Dialog, Usage, ModelInfo, StoredTextData, UpdateResult,
+    CommunicationRequest, CommunicationBatchRequest, CommunicationBatchResponse
 )
 
 
@@ -36,6 +37,7 @@ class MostClient(object):
                  model_id=None,
 
                  base_url: str | httpx.URL | None = None,
+                 etl_base_url: str | httpx.URL | None = None,
                  timeout: Union[float, httpx.Timeout] = 1e10,
                  max_retries: int = DEFAULT_MAX_RETRIES,
                  # retry_delay: float = DEFAULT_RETRY_DELAY,
@@ -61,6 +63,13 @@ class MostClient(object):
             base_url = os.environ.get("MOST_BASE_URL")
         if base_url is None:
             base_url = f"https://api.the-most.ai/api/external"
+
+        if etl_base_url is None:
+            etl_base_url = os.environ.get("MOST_ETL_BASE_URL")
+        if etl_base_url is None:
+            etl_base_url = f"https://etl.the-most.ai"
+
+        self.etl_base_url = etl_base_url
 
         if http_client is None:
             http_client = httpx.Client(base_url=base_url,
@@ -101,7 +110,8 @@ class MostClient(object):
     def clone(self):
         client = MostClient(client_id=self.client_id,
                             client_secret=self.client_secret,
-                            model_id=self.model_id)
+                            model_id=self.model_id,
+                            etl_base_url=self.etl_base_url)
         client.access_token = self.access_token
         client.session = self.session
         client.score_modifier = self.score_modifier
@@ -552,7 +562,7 @@ class MostClient(object):
 
     def __repr__(self):
         model_name = self.model_alias if self.model_alias is not None else self.model_id
-        args = [model_name]
+        args = [str(model_name) if model_name is not None else "None"]
         if self.released:
             args.append("released")
 
@@ -633,3 +643,83 @@ class MostClient(object):
         if "text" not in data:
             raise RuntimeError("Anonymization failed")
         return data["text"]
+
+    def upload_communications(self,
+                              communications: Union[List[CommunicationRequest], List[Dict[str, Any]]],
+                              overwrite: bool = False) -> CommunicationBatchResponse:
+        """
+        Загружает метаданные коммуникаций пачкой на ETL API.
+
+        Args:
+            communications: Список коммуникаций для загрузки.
+                           Может быть списком CommunicationRequest объектов или списком словарей.
+                           Словари автоматически валидируются и преобразуются в CommunicationRequest.
+            overwrite: Если True, перезаписывает существующие записи в S3.
+                      По умолчанию False - дубликаты пропускаются
+
+        Returns:
+            CommunicationBatchResponse с результатами загрузки
+        """
+        if self.access_token is None:
+            self.refresh_access_token()
+
+        # Преобразуем словари в CommunicationRequest объекты, если нужно
+        validated_communications: List[CommunicationRequest] = []
+        for comm in communications:
+            if isinstance(comm, dict):
+                validated_communications.append(self.retort.load(comm, CommunicationRequest))
+            elif isinstance(comm, CommunicationRequest):
+                validated_communications.append(comm)
+            else:
+                raise TypeError(f"Ожидается CommunicationRequest или dict, получен {type(comm)}")
+
+        request_data = CommunicationBatchRequest(
+            communications=validated_communications,
+            overwrite=overwrite
+        )
+
+        headers = {"Authorization": f"Bearer {self.access_token}"}
+        url = f"{self.etl_base_url}/api/v1/communications"
+        resp = self.session.post(
+            url,
+            json=request_data.to_dict(),
+            headers=headers,
+            timeout=None
+        )
+
+        if resp.status_code == 401:
+            self.refresh_access_token()
+            headers = {"Authorization": f"Bearer {self.access_token}"}
+            resp = self.session.post(
+                url,
+                json=request_data.to_dict(),
+                headers=headers,
+                timeout=None
+            )
+
+        if resp.status_code >= 400:
+            if resp.headers.get("Content-Type") == "application/json":
+                error_data = resp.json()
+                if "detail" in error_data:
+                    # ValidationError format
+                    detail = error_data["detail"]
+                    if isinstance(detail, list) and len(detail) > 0:
+                        error_msg = "; ".join([f"{err.get('loc', [])}: {err.get('msg', '')}" for err in detail])
+                    else:
+                        error_msg = str(detail)
+                    
+                    # Проверяем, является ли это ошибкой регистрации клиента
+                    error_msg_lower = error_msg.lower()
+                    if "не зарегистрирован" in error_msg_lower or "not registered" in error_msg_lower:
+                        raise RuntimeError(error_msg)
+                    else:
+                        raise RuntimeError(f"Validation error: {error_msg}")
+                elif "message" in error_data:
+                    raise RuntimeError(error_data["message"])
+                else:
+                    raise RuntimeError(f"Error: {error_data}")
+            else:
+                error_msg = resp.content.decode() if resp.content else "Something went wrong."
+                raise RuntimeError(error_msg)
+
+        return self.retort.load(resp.json(), CommunicationBatchResponse)

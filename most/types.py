@@ -302,3 +302,47 @@ def is_valid_id(smth_id: Optional[str]) -> bool:
         smth_id = smth_id[5:]
 
     return is_valid_objectid(smth_id) or is_valid_english_word(smth_id)
+
+
+@dataclass_json
+@dataclass
+class CommunicationRequest(DataClassJsonMixin):
+    source_entity_id: str
+    most_communication_id: str
+    start_dt: str
+    end_dt: str
+    manager: str
+    talk_duration: int
+    client_phone: Optional[str] = None
+    wait_duration: Optional[int] = None
+    status: Optional[str] = None
+    communication_type: Literal["call", "chat"] = "call"
+    manager_extension: Optional[str] = None
+    manager_direct_number: Optional[str] = None
+    communication_direction: Optional[Literal["inbound", "outbound"]] = None
+    communication_result: Optional[Literal["answered", "missed", "no_answer", "busy", "failed", "unknown"]] = None
+    result: Optional[Literal["answered", "missed", "no_answer", "busy", "failed", "unknown"]] = None
+    extra_fields: Optional[Dict[str, Union[str, int, float, bool]]] = None
+    tech_fields: Optional[Dict[str, Union[str, int, float, bool]]] = None
+
+
+@dataclass_json
+@dataclass
+class CommunicationResponse(DataClassJsonMixin):
+    reason: str
+    success: bool = True
+
+
+@dataclass_json
+@dataclass
+class CommunicationBatchRequest(DataClassJsonMixin):
+    communications: List[CommunicationRequest]
+    overwrite: bool = False
+
+
+@dataclass_json
+@dataclass
+class CommunicationBatchResponse(DataClassJsonMixin):
+    status_per_communication: Dict[str, CommunicationResponse]
+    total_saved: int
+    success: bool = True
