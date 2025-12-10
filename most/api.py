@@ -487,15 +487,22 @@ class MostClient(object):
     def update_dialog(self,
                       data_id,
                       dialog: Dialog,
-                      data_source: Literal["audio", "text"] = "audio") -> DialogResult:
-        if not is_valid_id(self.model_id):
-            raise RuntimeError("Please choose valid model to apply. [try list_models()]")
+                      data_source: Literal["audio", "text"] = "audio",
+                      transcribator_name: Optional[Literal["CallTouchSTT"]] = None) -> DialogResult:
 
         if not is_valid_id(data_id):
             raise RuntimeError("Please use valid data_id. [try audio.id from list_audios()]")
 
-        resp = self.put(f"/{self.client_id}/{data_source}/{data_id}/model/{self.model_id}/dialog",
-                        json={"dialog": dialog.to_dict()})
+        if transcribator_name is None:
+            if not is_valid_id(self.model_id):
+                raise RuntimeError("Please choose valid model to apply. [try list_models()]")
+
+            resp = self.put(f"/{self.client_id}/{data_source}/{data_id}/model/{self.model_id}/dialog",
+                            json={"dialog": dialog.to_dict()})
+        else:
+            resp = self.put(f"/{self.client_id}/{data_source}/{data_id}/transcribator/{transcribator_name}/dialog",
+                            json={"dialog": dialog.to_dict()})
+
         return self.retort.load(resp.json(), DialogResult)
 
     def export(self, audio_ids: List[str],
