@@ -457,31 +457,34 @@ class MostClient(object):
         return result
 
     def fetch_text(self, data_id: str,
-                   data_source: Literal["text", "audio"] = "audio") -> Result:
-        if not is_valid_id(self.model_id):
-            raise RuntimeError("Please choose valid model to apply. [try list_models()]")
+                   data_source: Literal["text", "audio"] = "audio",
+                   transcribator_name: Optional[Literal["GroundTruth"]] = None) -> Result:
 
         if not is_valid_id(data_id):
             raise RuntimeError("Please use valid data_id. [try audio.id / text.id from list_audios() / list_texts()]")
 
-        resp = self.get(f"/{self.client_id}/{data_source}/{data_id}/model/{self.model_id}/text")
+        if transcribator_name is not None:
+            resp = self.get(f"/{self.client_id}/{data_source}/{data_id}/transcribator/{transcribator_name}/text")
+        else:
+            if not is_valid_id(self.model_id):
+                raise RuntimeError("Please choose valid model to apply. [try list_models()]")
+            resp = self.get(f"/{self.client_id}/{data_source}/{data_id}/model/{self.model_id}/text")
+
         return self.retort.load(resp.json(), Result)
 
-    def fetch_dialog(self, data_id: str,
-                     transcribator_name: Optional[Literal["GroundTruth"]] = None,
-                     data_source: Literal["text", "audio"] = "audio") -> DialogResult:
-        if not is_valid_id(self.model_id):
-            raise RuntimeError("Please choose valid model to apply. [try list_models()]")
-
+    def fetch_dialog(self, data_id,
+                     data_source: Literal["text", "audio"] = "audio",
+                     transcribator_name: Optional[Literal["GroundTruth"]] = None) -> DialogResult:
         if not is_valid_id(data_id):
             raise RuntimeError("Please use valid data_id. [try audio.id / text.id from list_audios() / list_texts()]")
 
-        params = {}
         if transcribator_name is not None:
-            params["transcribator_name"] = transcribator_name
+            resp = self.get(f"/{self.client_id}/{data_source}/{data_id}/transcribator/{transcribator_name}/dialog")
+        else:
+            if not is_valid_id(self.model_id):
+                raise RuntimeError("Please choose valid model to apply. [try list_models()]")
+            resp = self.get(f"/{self.client_id}/{data_source}/{data_id}/model/{self.model_id}/dialog")
 
-        resp = self.get(f"/{self.client_id}/{data_source}/{data_id}/model/{self.model_id}/dialog",
-                        params=params)
         return self.retort.load(resp.json(), DialogResult)
 
     def update_dialog(self,
