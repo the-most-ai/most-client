@@ -11,7 +11,9 @@ class IDCondition(DataClassJsonMixin):
     equal: Optional[str] = None
     in_set: Optional[List[str]] = None
     greater_than: Optional[str] = None
+    not_greater_than: Optional[str] = None
     less_than: Optional[str] = None
+    not_less_than: Optional[str] = None
     type: Literal["IDCondition"] = "IDCondition"
 
 
@@ -53,7 +55,9 @@ class StoredInfoCondition(DataClassJsonMixin):
     starts_with: Optional[str] = None
     ends_with: Optional[str] = None
     greater_than: Optional[int | str | float] = None
+    not_greater_than: Optional[int | str | float] = None
     less_than: Optional[int | str | float] = None
+    not_less_than: Optional[int | str | float] = None
     type: Literal["StoredInfoCondition"] = "StoredInfoCondition"
 
 
@@ -86,7 +90,9 @@ class AggregatedResultsCondition(DataClassJsonMixin):
     aggregation: Literal["sum", "avg", "min", "max"] = "sum"
 
     greater_than: Optional[int] = None
+    not_greater_than: Optional[int | str | float] = None
     less_than: Optional[int] = None
+    not_less_than: Optional[int | str | float] = None
 
     modified: bool = False
 
@@ -110,7 +116,9 @@ class ResultsCondition(DataClassJsonMixin):
     score_equal: Optional[int] = None
     score_in_set: Optional[List[int]] = None
     score_greater_than: Optional[int] = None
+    score_not_greater_than: Optional[int] = None
     score_less_than: Optional[int] = None
+    score_not_less_than: Optional[int] = None
 
     modified: bool = False
 
