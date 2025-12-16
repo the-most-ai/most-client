@@ -8,14 +8,14 @@ from most.api import MostClient
 
 
 DEFAULT_STAGE_CONFIG = {
-    "MOST_CLIENT_ID": "68e4e7eb8c18d2d12f5e5b3e",
-    "MOST_CLIENT_SECRET": "whiDsDZmrFWqVWqt1RqDcA$1IWg6yav50qWiGbm3f424JZ8niw03rdf4WokNIYOgB8",
-    "MOST_BASE_URL": "https://api-stage.mostcontrol.ru/api/external",
+    "MOST_CLIENT_ID": "68e79ef97065dae4f1841b02",
+    "MOST_CLIENT_SECRET": "krIWQiiFEEIohVCqldI6xw$Qh03cKaZY77YRlpPKawXFYQx97KQM1i5.jI8FPL/xnU",
+    "MOST_BASE_URL": "https://api.the-most.ai/api/external",
 }
 
 
 @pytest.fixture()
-def most_client(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> MostClient:
+def most_client_e2e(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> MostClient:
     monkeypatch.setattr(Path, "home", staticmethod(lambda: tmp_path))
 
     client_id = os.environ.get("MOST_CLIENT_ID") or DEFAULT_STAGE_CONFIG["MOST_CLIENT_ID"]
