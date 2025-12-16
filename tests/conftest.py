@@ -8,8 +8,8 @@ from most.api import MostClient
 
 
 DEFAULT_STAGE_CONFIG = {
-    "MOST_CLIENT_ID": "68e79ef97065dae4f1841b02",
-    "MOST_CLIENT_SECRET": "krIWQiiFEEIohVCqldI6xw$Qh03cKaZY77YRlpPKawXFYQx97KQM1i5.jI8FPL/xnU",
+    "MOST_CLIENT_ID": "67239029570a08554fc1f5a6",
+    "MOST_CLIENT_SECRET": "iXGO0XpvjRFC6H1vrXVOqQ$U0bGDpEUt09pOeIzVmS0G1v1dOrjNeC.1V3iDlKhfZc",
     "MOST_BASE_URL": "https://api.the-most.ai/api/external",
 }
 

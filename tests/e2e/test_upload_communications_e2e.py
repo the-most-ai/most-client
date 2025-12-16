@@ -13,8 +13,8 @@ from most.types import CommunicationRequest
 # Значения по умолчанию используются только если переменные окружения не установлены
 # Для production используйте переменные окружения MOST_CLIENT_ID и MOST_CLIENT_SECRET
 DEFAULT_ETL_BASE_URL = "https://etl.the-most.ai"
-os.environ["MOST_CLIENT_ID"] = "68e79ef97065dae4f1841b02"
-os.environ["MOST_CLIENT_SECRET"] = "krIWQiiFEEIohVCqldI6xw$Qh03cKaZY77YRlpPKawXFYQx97KQM1i5.jI8FPL/xnU"
+os.environ["MOST_CLIENT_ID"] = "67239029570a08554fc1f5a6"
+os.environ["MOST_CLIENT_SECRET"] = "iXGO0XpvjRFC6H1vrXVOqQ$U0bGDpEUt09pOeIzVmS0G1v1dOrjNeC.1V3iDlKhfZc"
 
 
 def handle_etl_registration_error(func):
