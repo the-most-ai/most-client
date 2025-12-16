@@ -8,11 +8,11 @@ def _write_silence_wav(path: Path, duration_seconds: float = 0.1, sample_rate: i
     audio.export(path, format="wav")
 
 
-def test_upload_text_and_audio_roundtrip(most_client, tmp_path: Path) -> None:
-    text: Text = most_client.upload_text("Hello, MOST!")
+def test_upload_text_and_audio_roundtrip(most_client_e2e, tmp_path: Path) -> None:
+    text: Text = most_client_e2e.upload_text("Hello, MOST!")
     assert text.id
 
-    fetched_text = most_client.fetch_text(text.id,
+    fetched_text = most_client_e2e.fetch_text(text.id,
                                           data_source="text")
     assert fetched_text.id
     assert fetched_text.id == text.id
@@ -21,15 +21,16 @@ def test_upload_text_and_audio_roundtrip(most_client, tmp_path: Path) -> None:
     audio_file = tmp_path / "sample.wav"
     _write_silence_wav(audio_file)
 
-    audio = most_client.upload_audio(audio_file)
+    audio = most_client_e2e.upload_audio(audio_file)
     assert audio.id
     assert audio.url
 
-    text_obj = most_client.upload_text("Привет, мир!")
+    text_obj = most_client_e2e.upload_text("Привет, мир!")
     assert text_obj.id
 
-    # if most_client.model_id:
-    #     result = most_client.apply_on_text(text_obj.id,
+    # if most_client_e2e.model_id:
+    #     result = most_client_e2e.apply_on_text(text_obj.id,
     #                                        overwrite=True)
     #     assert result.id
     #     assert result.results
+
