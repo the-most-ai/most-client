@@ -522,6 +522,14 @@ class AsyncMostClient(object):
 
         return self.retort.load(resp.json(), DialogResult)
 
+    async def recreate_dialog_from_raw_text(self,
+                                            text_id) -> DialogResult:
+        if not is_valid_id(text_id):
+            raise RuntimeError("Please use valid text_id. [try text.id from list_texts()]")
+
+        resp = await self.post(f"/{self.client_id}/text/{text_id}/restore_dialog_from_text")
+        return self.retort.load(resp.json(), DialogResult)
+
     async def export(self, audio_ids: List[str],
                      aggregated_by: Optional[str] = None,
                      aggregation_title: Optional[str] = None,
