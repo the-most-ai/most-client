@@ -9,6 +9,8 @@ from .glossary import Glossary
 from .async_glossary import AsyncGlossary
 from .catalog import Catalog
 from .async_catalog import AsyncCatalog
+from .async_teleprompter import AsyncTeleprompter
+from .teleprompter import Teleprompter
 from .types import (
     GlossaryNGram,
     Item,
