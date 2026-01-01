@@ -8,7 +8,7 @@ import httpx
 import json5
 from adaptix import Retort, loader
 from pydub import AudioSegment
-from most._constrants import DEFAULT_MAX_RETRIES
+from most._constrants import DEFAULT_MAX_RETRIES, DEFAULT_TIMEOUT
 from most.score_calculation import ScoreCalculation
 from most.types import (
     Audio,
@@ -41,7 +41,7 @@ class AsyncMostClient(object):
                  model_id=None,
 
                  base_url: str | httpx.URL | None = None,
-                 timeout: Union[float, httpx.Timeout] = 1e10,
+                 timeout: Union[float, httpx.Timeout] = DEFAULT_TIMEOUT,
                  max_retries: int = DEFAULT_MAX_RETRIES,
                  # retry_delay: float = 0,
                  http_client: httpx.AsyncClient | None = None,

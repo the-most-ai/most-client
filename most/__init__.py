@@ -11,6 +11,8 @@ from .catalog import Catalog
 from .async_catalog import AsyncCatalog
 from .async_teleprompter import AsyncTeleprompter
 from .teleprompter import Teleprompter
+from .badge import Badge
+from .async_badge import AsyncBadge
 from .types import (
     GlossaryNGram,
     Item,
