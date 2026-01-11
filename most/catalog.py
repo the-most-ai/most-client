@@ -14,11 +14,15 @@ class Catalog(object):
             items = [items]
         resp = self.client.post(f"/{self.client.client_id}/upload_items",
                                 json=[item.to_dict() for item in items])
-        return self.client.retort.load(resp.json(), List[Item])
+        # return self.client.retort.load(resp.json(), List[Item])
+        return [Item.from_dict(item)
+                for item in resp.json()]
 
     def list_items(self) -> List[Item]:
         resp = self.client.get(f"/{self.client.client_id}/items")
-        return self.client.retort.load(resp.json(), List[Item])
+        # return self.client.retort.load(resp.json(), List[Item])
+        return [Item.from_dict(item)
+                for item in resp.json()]
 
     def delete_items(self, item_ids: List[str]):
         if not isinstance(item_ids, list):
@@ -35,4 +39,6 @@ class Catalog(object):
                                    "query": query,
                                    "limit": limit,
                                })
-        return self.client.retort.load(resp.json(), List[Item])
+        # return self.client.retort.load(resp.json(), List[Item])
+        return [Item.from_dict(item)
+                for item in resp.json()]

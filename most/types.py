@@ -226,7 +226,7 @@ class GlossaryNGram(DataClassJsonMixin):
 class Item(DataClassJsonMixin):
     title: str
     pronunciation: str
-    metadata: Dict[str, str]
+    metadata: Dict[str, Union[str, int, float, bool]]
     id: Optional[str] = None
 
 
