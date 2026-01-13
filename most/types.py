@@ -310,9 +310,9 @@ class CommunicationRequest(DataClassJsonMixin):
     source_entity_id: str
     most_communication_id: str
     start_dt: str
-    end_dt: str
     manager: str
-    talk_duration: int
+    end_dt: Optional[str] = None
+    talk_duration: Optional[int] = None
     client_phone: Optional[str] = None
     wait_duration: Optional[int] = None
     status: Optional[str] = None
