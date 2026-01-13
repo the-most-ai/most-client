@@ -14,4 +14,3 @@ twine
 httpx
 pydub
 aiofiles
-dotenv
