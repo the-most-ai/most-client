@@ -226,7 +226,14 @@ class GlossaryNGram(DataClassJsonMixin):
 class Item(DataClassJsonMixin):
     title: str
     pronunciation: str
-    metadata: Dict[str, Union[str, int, float, bool]]
+
+    url: Optional[str] = None
+    price: Optional[int] = None
+    category: Optional[str] = None
+    image_urls: List[str] = field(default_factory=list)
+    available: bool = True
+
+    metadata: Dict[str, Union[str, int, float, bool]] = field(default_factory=dict)
     id: Optional[str] = None
 
 
