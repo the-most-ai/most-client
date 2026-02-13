@@ -19,7 +19,8 @@ from most.types import (
     StoredAudioData,
     Text,
     is_valid_id, is_valid_objectid, ScriptScoreMapping, Dialog, Usage, ModelInfo, StoredTextData, UpdateResult,
-    CommunicationRequest, CommunicationBatchRequest, CommunicationBatchResponse
+    CommunicationRequest, CommunicationBatchRequest, CommunicationBatchResponse,
+    ProcessCommunicationByIdResponse,
 )
 
 
@@ -741,3 +742,58 @@ class MostClient(object):
                 raise RuntimeError(error_msg)
 
         return self.retort.load(resp.json(), CommunicationBatchResponse)
+
+    def process_communication_by_id(
+        self,
+        most_communication_id: str,
+        **call_info: Any,
+    ) -> ProcessCommunicationByIdResponse:
+        """
+        Отправляет коммуникацию по most_communication_id в хук n8n (ETL API).
+        Перед отправкой на ETL проверяется принадлежность коммуникации клиенту
+        через MOST API. Доп. аргументы попадают в call_info.
+        """
+        if self.access_token is None:
+            self.refresh_access_token()
+
+        body = {"most_communication_id": most_communication_id, **call_info}
+
+        headers = {"Authorization": f"Bearer {self.access_token}"}
+        url = f"{self.etl_base_url}/api/v1/process_communication_by_id"
+        resp = self.session.post(url, json=body, headers=headers, timeout=None)
+
+        if resp.status_code == 401:
+            self.refresh_access_token()
+            headers = {"Authorization": f"Bearer {self.access_token}"}
+            resp = self.session.post(url, json=body, headers=headers, timeout=None)
+
+        if resp.status_code >= 400:
+            if resp.headers.get("Content-Type") == "application/json":
+                try:
+                    error_data = resp.json()
+                    if "detail" in error_data:
+                        detail = error_data["detail"]
+                        if isinstance(detail, list) and len(detail) > 0:
+                            error_msg = "; ".join(
+                                [
+                                    f"{err.get('loc', [])}: {err.get('msg', '')}"
+                                    for err in detail
+                                ]
+                            )
+                        else:
+                            error_msg = str(detail)
+                        raise RuntimeError(error_msg)
+                    if "message" in error_data:
+                        raise RuntimeError(error_data["message"])
+                    raise RuntimeError(f"Error: {error_data}")
+                except RuntimeError:
+                    raise
+                except Exception:
+                    pass
+            error_msg = (
+                resp.content.decode() if resp.content else f"HTTP {resp.status_code}"
+            )
+            raise RuntimeError(error_msg)
+
+        data = resp.json()
+        return self.retort.load(data, ProcessCommunicationByIdResponse)

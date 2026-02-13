@@ -353,3 +353,13 @@ class CommunicationBatchResponse(DataClassJsonMixin):
     status_per_communication: Dict[str, CommunicationResponse]
     total_saved: int
     success: bool = True
+
+
+@dataclass_json
+@dataclass
+class ProcessCommunicationByIdResponse(DataClassJsonMixin):
+    """Ответ после отправки коммуникации в n8n."""
+    success: bool
+    most_communication_id: str
+    execution_id: Optional[str] = None
+    error: Optional[str] = None
