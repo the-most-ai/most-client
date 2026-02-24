@@ -511,14 +511,18 @@ class AsyncMostClient(object):
             raise RuntimeError("Please use valid data_id. [try audio.id from list_audios()]")
 
         if transcribator_name is None:
-            if not is_valid_id(self.model_id):
+            if data_source == "audio" and not is_valid_id(self.model_id):
                 raise RuntimeError("Please choose valid model to apply. [try list_models()]")
 
-            resp = await self.put(f"/{self.client_id}/{data_source}/{data_id}/model/{self.model_id}/dialog",
-                              json={"dialog": dialog.to_dict()})
+            if data_source == "text":
+                pathname = f"/{self.client_id}/{data_source}/{data_id}/dialog"
+            else:
+                pathname = f"/{self.client_id}/{data_source}/{data_id}/model/{self.model_id}/dialog"
         else:
-            resp = await self.put(f"/{self.client_id}/{data_source}/{data_id}/transcribator/{transcribator_name}/dialog",
-                                  json={"dialog": dialog.to_dict()})
+            pathname = f"/{self.client_id}/{data_source}/{data_id}/transcribator/{transcribator_name}/dialog"
+
+        resp = await self.put(pathname,
+                              json={"dialog": dialog.to_dict()})
 
         return self.retort.load(resp.json(), DialogResult)
 
