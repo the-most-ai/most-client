@@ -521,6 +521,30 @@ class MostClient(object):
         resp = self.post(f"/{self.client_id}/text/{text_id}/restore_dialog_from_text")
         return self.retort.load(resp.json(), DialogResult)
 
+    def assign_text_speakers(self, text_id: str) -> Dict[str, str]:
+        """
+        Назначает спикеров в диалоге с помощью LLM.
+
+        Использует настроенный SimpleSpeakerAssigner для определения
+        ролей спикеров на основе их реплик в диалоге.
+
+        Args:
+            text_id: ID текста с диалогом
+
+        Returns:
+            Словарь с маппингом спикеров {speaker: role}
+        """
+        if not is_valid_id(text_id):
+            raise RuntimeError(
+                "Please use valid text_id. "
+                "[try text.id from list_texts()]"
+            )
+
+        resp = self.post(
+            f"/{self.client_id}/text/{text_id}/assign_speakers"
+        )
+        return resp.json().get("speakers_mapping", {})
+
     def export(self, audio_ids: List[str],
                aggregated_by: Optional[str] = None,
                aggregation_title: Optional[str] = None,
