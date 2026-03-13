@@ -21,6 +21,10 @@ from most.types import (
     is_valid_id, is_valid_objectid, ScriptScoreMapping, Dialog, Usage, ModelInfo, StoredTextData, UpdateResult,
     CommunicationRequest, CommunicationBatchRequest, CommunicationBatchResponse,
     ProcessCommunicationByIdResponse,
+    CreateChainFromCommunicationsRequest,
+    CreateChainFromCommunicationsResponse,
+    DeleteChainResponse,
+    GetCommunicationMostIdResponse,
 )
 
 
@@ -797,3 +801,137 @@ class MostClient(object):
 
         data = resp.json()
         return self.retort.load(data, ProcessCommunicationByIdResponse)
+
+    def create_chain_from_communications(
+        self,
+        most_communication_ids: List[str],
+        transcribe_sync: Optional[bool] = None,
+    ) -> CreateChainFromCommunicationsResponse:
+        """
+        Создаёт цепочку из списка most_communication_ids. Возвращает chain_id сразу;
+        транскрибация, склейка и загрузка в MOST выполняются в фоне.
+        most_communication_id цепочки можно получить позже через
+        get_communication_most_id(communication_id).
+        Идемпотентно: при том же наборе и порядке возвращает существующую цепочку.
+        transcribe_sync=True — синхронная транскрибация (быстрее), False — асинхронная с опросом.
+        """
+        if self.access_token is None:
+            self.refresh_access_token()
+
+        body: Dict[str, Any] = {"most_communication_ids": most_communication_ids}
+        if transcribe_sync is not None:
+            body["transcribe_sync"] = transcribe_sync
+        headers = {"Authorization": f"Bearer {self.access_token}"}
+        url = f"{self.etl_base_url}/api/v1/acreate_chain_from_communications"
+        resp = self.session.post(url, json=body, headers=headers, timeout=None)
+
+        if resp.status_code == 401:
+            self.refresh_access_token()
+            headers = {"Authorization": f"Bearer {self.access_token}"}
+            resp = self.session.post(url, json=body, headers=headers, timeout=None)
+
+        if resp.status_code >= 400:
+            if resp.headers.get("Content-Type") == "application/json":
+                try:
+                    error_data = resp.json()
+                    if "detail" in error_data:
+                        detail = error_data["detail"]
+                        if isinstance(detail, list) and len(detail) > 0:
+                            error_msg = "; ".join(
+                                [
+                                    f"{err.get('loc', [])}: {err.get('msg', '')}"
+                                    for err in detail
+                                ]
+                            )
+                        else:
+                            error_msg = str(detail)
+                        raise RuntimeError(error_msg)
+                    if "message" in error_data:
+                        raise RuntimeError(error_data["message"])
+                    raise RuntimeError(f"Error: {error_data}")
+                except RuntimeError:
+                    raise
+                except Exception:
+                    pass
+            error_msg = (
+                resp.content.decode() if resp.content else f"HTTP {resp.status_code}"
+            )
+            raise RuntimeError(error_msg)
+
+        return self.retort.load(resp.json(), CreateChainFromCommunicationsResponse)
+
+    def delete_chain(self, chain_id: int) -> DeleteChainResponse:
+        """
+        Удаляет цепочку: удаляет коммуникацию в MOST (если была загружена)
+        и запись цепочки в БД ETL. 404 если цепочка не найдена или не принадлежит клиенту.
+        """
+        if self.access_token is None:
+            self.refresh_access_token()
+
+        headers = {"Authorization": f"Bearer {self.access_token}"}
+        url = f"{self.etl_base_url}/api/v1/chains/{chain_id}"
+        resp = self.session.delete(url, headers=headers, timeout=None)
+
+        if resp.status_code == 401:
+            self.refresh_access_token()
+            headers = {"Authorization": f"Bearer {self.access_token}"}
+            resp = self.session.delete(url, headers=headers, timeout=None)
+
+        if resp.status_code >= 400:
+            if resp.headers.get("Content-Type") == "application/json":
+                try:
+                    error_data = resp.json()
+                    if "detail" in error_data:
+                        raise RuntimeError(str(error_data["detail"]))
+                    if "message" in error_data:
+                        raise RuntimeError(error_data["message"])
+                    raise RuntimeError(f"Error: {error_data}")
+                except RuntimeError:
+                    raise
+                except Exception:
+                    pass
+            error_msg = (
+                resp.content.decode() if resp.content else f"HTTP {resp.status_code}"
+            )
+            raise RuntimeError(error_msg)
+
+        return self.retort.load(resp.json(), DeleteChainResponse)
+
+    def get_communication_most_id(
+        self, communication_id: int
+    ) -> GetCommunicationMostIdResponse:
+        """
+        По внутреннему id коммуникации возвращает most_communication_id.
+        Ошибка 404 если коммуникации нет или она не принадлежит клиенту.
+        """
+        if self.access_token is None:
+            self.refresh_access_token()
+
+        headers = {"Authorization": f"Bearer {self.access_token}"}
+        url = f"{self.etl_base_url}/api/v1/communications/{communication_id}/most_communication_id"
+        resp = self.session.get(url, headers=headers, timeout=None)
+
+        if resp.status_code == 401:
+            self.refresh_access_token()
+            headers = {"Authorization": f"Bearer {self.access_token}"}
+            resp = self.session.get(url, headers=headers, timeout=None)
+
+        if resp.status_code >= 400:
+            if resp.headers.get("Content-Type") == "application/json":
+                try:
+                    error_data = resp.json()
+                    if "detail" in error_data:
+                        raise RuntimeError(str(error_data["detail"]))
+                    if "message" in error_data:
+                        raise RuntimeError(error_data["message"])
+                    raise RuntimeError(f"Error: {error_data}")
+                except RuntimeError:
+                    raise
+                except Exception:
+                    pass
+            error_msg = (
+                resp.content.decode() if resp.content else f"HTTP {resp.status_code}"
+            )
+            raise RuntimeError(error_msg)
+
+        return self.retort.load(resp.json(), GetCommunicationMostIdResponse)

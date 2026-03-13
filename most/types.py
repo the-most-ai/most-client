@@ -363,3 +363,33 @@ class ProcessCommunicationByIdResponse(DataClassJsonMixin):
     most_communication_id: str
     execution_id: Optional[str] = None
     error: Optional[str] = None
+
+
+@dataclass_json
+@dataclass
+class CreateChainFromCommunicationsRequest(DataClassJsonMixin):
+    """Запрос на создание цепочки из списка most_communication_ids."""
+    most_communication_ids: List[str]
+    transcribe_sync: Optional[bool] = None
+
+
+@dataclass_json
+@dataclass
+class CreateChainFromCommunicationsResponse(DataClassJsonMixin):
+    """Ответ: chain_id созданной цепочки (транскрибация/загрузка в MOST — в фоне)."""
+    chain_id: int
+
+
+@dataclass_json
+@dataclass
+class DeleteChainResponse(DataClassJsonMixin):
+    """Ответ после удаления цепочки."""
+    deleted: bool
+    chain_id: int
+
+
+@dataclass_json
+@dataclass
+class GetCommunicationMostIdResponse(DataClassJsonMixin):
+    """Ответ: most_communication_id по внутреннему id коммуникации."""
+    most_communication_id: Optional[str] = None

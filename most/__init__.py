@@ -21,4 +21,9 @@ from .types import (
     CommunicationBatchRequest,
     CommunicationBatchResponse,
     CommunicationResponse,
+    CreateChainFromCommunicationsRequest,
+    CreateChainFromCommunicationsResponse,
+    DeleteChainResponse,
+    GetCommunicationMostIdResponse,
+    ProcessCommunicationByIdResponse,
 )
