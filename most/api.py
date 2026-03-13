@@ -502,14 +502,18 @@ class MostClient(object):
             raise RuntimeError("Please use valid data_id. [try audio.id from list_audios()]")
 
         if transcribator_name is None:
-            if not is_valid_id(self.model_id):
+            if data_source == "audio" and not is_valid_id(self.model_id):
                 raise RuntimeError("Please choose valid model to apply. [try list_models()]")
 
-            resp = self.put(f"/{self.client_id}/{data_source}/{data_id}/model/{self.model_id}/dialog",
-                            json={"dialog": dialog.to_dict()})
+            if data_source == "text":
+                pathname = f"/{self.client_id}/{data_source}/{data_id}/dialog"
+            else:
+                pathname = f"/{self.client_id}/{data_source}/{data_id}/model/{self.model_id}/dialog"
         else:
-            resp = self.put(f"/{self.client_id}/{data_source}/{data_id}/transcribator/{transcribator_name}/dialog",
-                            json={"dialog": dialog.to_dict()})
+            pathname = f"/{self.client_id}/{data_source}/{data_id}/transcribator/{transcribator_name}/dialog"
+
+        resp = self.put(pathname,
+                        json={"dialog": dialog.to_dict()})
 
         return self.retort.load(resp.json(), DialogResult)
 
@@ -520,6 +524,30 @@ class MostClient(object):
 
         resp = self.post(f"/{self.client_id}/text/{text_id}/restore_dialog_from_text")
         return self.retort.load(resp.json(), DialogResult)
+
+    def assign_text_speakers(self, text_id: str) -> Dict[str, str]:
+        """
+        Назначает спикеров в диалоге с помощью LLM.
+
+        Использует настроенный SimpleSpeakerAssigner для определения
+        ролей спикеров на основе их реплик в диалоге.
+
+        Args:
+            text_id: ID текста с диалогом
+
+        Returns:
+            Словарь с маппингом спикеров {speaker: role}
+        """
+        if not is_valid_id(text_id):
+            raise RuntimeError(
+                "Please use valid text_id. "
+                "[try text.id from list_texts()]"
+            )
+
+        resp = self.post(
+            f"/{self.client_id}/text/{text_id}/assign_speakers"
+        )
+        return resp.json().get("speakers_mapping", {})
 
     def export(self, audio_ids: List[str],
                aggregated_by: Optional[str] = None,
